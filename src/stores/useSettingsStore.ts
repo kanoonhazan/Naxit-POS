@@ -1,8 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {createMMKV} from 'react-native-mmkv';
 import {create} from 'zustand';
 
 import type {StoreSettings} from '../types';
 
+const storage = createMMKV({id: 'settings-storage'});
 const SETTINGS_KEY = 'pos_store_settings';
 
 type SettingsStore = {
@@ -49,7 +50,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   loadFromStorage: async () => {
     try {
-      const stored = await AsyncStorage.getItem(SETTINGS_KEY);
+      const stored = storage.getString(SETTINGS_KEY);
 
       if (stored) {
         const parsed = JSON.parse(stored) as StoreSettings;
@@ -65,9 +66,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   persistToStorage: async (settings: StoreSettings) => {
     try {
-      await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      storage.set(SETTINGS_KEY, JSON.stringify(settings));
     } catch {
-      // Silent failure — settings will be re-persisted on next update
+      // Silent failure
     }
   },
 }));

@@ -19,7 +19,7 @@ import {
   printReceipt,
 } from '../../../services/receiptPrinter';
 import {theme} from '../../../theme';
-import type {PaymentMethod, Product, Receipt} from '../../../types';
+import type {PaymentMethod, Product} from '../../../types';
 
 import {CartPanel} from '../components/CartPanel';
 import {CheckoutDock} from '../components/CheckoutDock';
@@ -68,7 +68,7 @@ export function SalesScreen() {
           };
         })
         .filter(Boolean) as (Product & {quantity: number; lineTotal: number})[],
-    [cartItems, getProductById, products],
+    [cartItems, getProductById],
   );
 
   const subtotal = cartProducts.reduce((sum, item) => sum + item.lineTotal, 0);

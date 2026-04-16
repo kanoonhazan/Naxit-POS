@@ -82,7 +82,7 @@ export function ScannerModal({
     } else {
       setScannerState('idle');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Remove unused comment
   }, [visible]);
 
   return (

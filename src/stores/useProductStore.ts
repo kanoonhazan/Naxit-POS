@@ -5,7 +5,7 @@ import {
   updateProductStock,
   upsertProduct,
 } from '../database/posDb';
-import {theme} from '../theme';
+// Removed unused theme import
 import type {Product} from '../types';
 
 type ProductStore = {

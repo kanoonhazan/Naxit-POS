@@ -6,7 +6,7 @@ import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 import App from '../App';
 
-jest.mock('../src/data/posDb', () => ({
+jest.mock('../src/database/posDb', () => ({
   initializeDatabase: jest.fn(async () => {}),
   loadSnapshot: jest.fn(async () => {
     const {seedProducts, seedReceipts, seedSettings} = require('../src/seed');
@@ -24,12 +24,28 @@ jest.mock('../src/data/posDb', () => ({
   persistReceipt: jest.fn(async () => {}),
 }));
 
+jest.mock('react-native-mmkv', () => {
+  return {
+    createMMKV: jest.fn(() => ({
+      getString: jest.fn(),
+      getNumber: jest.fn(),
+      getBoolean: jest.fn(),
+      set: jest.fn(),
+      delete: jest.fn(),
+      clearAll: jest.fn(),
+      addOnValueChangedListener: jest.fn(),
+    })),
+  };
+});
+
 jest.mock('react-native-camera-kit', () => ({
   Camera: 'Camera',
   CameraType: {
     Back: 'back',
   },
 }));
+
+jest.mock('react-native-qrcode-svg', () => 'QRCode');
 
 jest.mock('react-native-permissions', () => ({
   PERMISSIONS: {

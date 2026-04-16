@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react';
 import {initializeDatabase, loadSnapshot} from '../database/posDb';
 import {useProductStore} from '../stores/useProductStore';
 import {useSalesStore} from '../stores/useSalesStore';
-import {useSettingsStore, defaultSettings} from '../stores/useSettingsStore';
+import {useSettingsStore} from '../stores/useSettingsStore';
 
 type AppInitState = {
   loading: boolean;
