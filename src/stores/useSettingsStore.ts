@@ -1,0 +1,75 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {create} from 'zustand';
+
+import type {StoreSettings} from '../types';
+
+const SETTINGS_KEY = 'pos_store_settings';
+
+type SettingsStore = {
+  settings: StoreSettings | null;
+
+  setSettings: (settings: StoreSettings) => void;
+
+  updateSettings: (patch: Partial<StoreSettings>) => void;
+
+  loadFromStorage: () => Promise<StoreSettings | null>;
+
+  persistToStorage: (settings: StoreSettings) => Promise<void>;
+};
+
+const defaultSettings: StoreSettings = {
+  storeName: 'Corner Shop POS',
+  storeSubtitle: 'Offline counter mode',
+  printerName: 'Thermal Printer T82',
+  printerConnected: true,
+  autoPrint: true,
+  currency: 'LKR',
+};
+
+export const useSettingsStore = create<SettingsStore>((set, get) => ({
+  settings: null,
+
+  setSettings: (settings: StoreSettings) => set({settings}),
+
+  updateSettings: (patch: Partial<StoreSettings>) => {
+    set(state => {
+      if (!state.settings) {
+        return state;
+      }
+
+      const nextSettings = {...state.settings, ...patch};
+
+      get()
+        .persistToStorage(nextSettings)
+        .catch(() => {});
+
+      return {settings: nextSettings};
+    });
+  },
+
+  loadFromStorage: async () => {
+    try {
+      const stored = await AsyncStorage.getItem(SETTINGS_KEY);
+
+      if (stored) {
+        const parsed = JSON.parse(stored) as StoreSettings;
+        set({settings: parsed});
+        return parsed;
+      }
+    } catch {
+      // Fall through to defaults
+    }
+
+    return null;
+  },
+
+  persistToStorage: async (settings: StoreSettings) => {
+    try {
+      await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      // Silent failure — settings will be re-persisted on next update
+    }
+  },
+}));
+
+export {defaultSettings};
