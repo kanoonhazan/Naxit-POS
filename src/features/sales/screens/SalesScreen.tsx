@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
   Button,
@@ -288,83 +288,77 @@ export function SalesScreen() {
     </View>
   );
 
-  const listFooter = (
-    <Card style={styles.cartCard}>
-      <SectionTitle
-        title="Live cart"
-        detail={
-          cartProducts.length
-            ? 'Every item stays editable without leaving the page.'
-            : 'Empty by design. Scan once and checkout stays ready below.'
-        }
-      />
-      <CartPanel
-        items={cartProducts}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
-        onScanFirst={handleDemoScan}
-      />
-    </Card>
-  );
+
 
   return (
     <View style={styles.root}>
       <FeedbackToast feedback={feedback} />
 
-      <Screen
-        scrollEnabled={false}
-        bottomPadding={0}>
+      <Screen scrollEnabled={false} bottomPadding={100}>
+        <View style={styles.contentWrap}>
+          <View style={styles.productsArea}>
+            <FlatList
+              data={filteredProducts}
+              keyExtractor={item => item.id}
+              ListHeaderComponent={listHeader}
+              numColumns={2}
+              columnWrapperStyle={styles.rowGap}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item: product }) => {
+                const isOutOfStock = product.stock <= 0;
+                return (
+                  <Pressable
+                    onPress={() => !isOutOfStock && handleAddToCart(product.id)}
+                    style={({ pressed }) => [
+                      styles.productTile,
+                      { borderColor: isOutOfStock ? theme.colors.border : product.color },
+                      pressed && !isOutOfStock ? styles.productTilePressed : null,
+                      isOutOfStock ? styles.productTileDisabled : null,
+                    ]}>
+                    <View
+                      style={[
+                        styles.productTileBadge,
+                        { backgroundColor: isOutOfStock ? theme.colors.muted : product.color },
+                      ]}
+                    />
+                    <Text style={[styles.productTileName, isOutOfStock && { color: theme.colors.muted }]}>
+                      {product.name}
+                    </Text>
+                    <View style={styles.productTileFooter}>
+                      <Text style={styles.productTilePrice}>
+                        {formatMoney(product.price)}
+                      </Text>
+                      <Text style={styles.productTileStock}>
+                        {product.stock} left
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
 
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={item => item.id}
-          ListHeaderComponent={listHeader}
-          ListFooterComponent={listFooter}
-          numColumns={2}
-          columnWrapperStyle={styles.rowGap}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item: product }) => {
-            const isOutOfStock = product.stock <= 0;
-            return (
-              <Pressable
-                onPress={() => !isOutOfStock && handleAddToCart(product.id)}
-                style={({ pressed }) => [
-                  styles.productTile,
-                  { borderColor: isOutOfStock ? theme.colors.border : product.color },
-                  pressed && !isOutOfStock ? styles.productTilePressed : null,
-                  isOutOfStock ? styles.productTileDisabled : null,
-                ]}>
-                <View
-                  style={[
-                    styles.productTileBadge,
-                    { backgroundColor: isOutOfStock ? theme.colors.muted : product.color },
-                  ]}
-                />
-                <Text style={[styles.productTileName, isOutOfStock && { color: theme.colors.muted }]}>
-                  {product.name}
-                </Text>
-                <View style={styles.productTileFooter}>
-                  <Text style={styles.productTilePrice}>
-                    {formatMoney(product.price)}
-                  </Text>
-                  <Text style={styles.productTileStock}>
-                    {product.stock} left
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          }}
-        />
+          <Card style={styles.cartCard}>
+            <CheckoutDock
+              subtotal={subtotal}
+              totalItems={totalItems}
+              hasItems={cartProducts.length > 0}
+              onCheckout={handleCheckout}
+            />
+            <ScrollView
+              style={styles.cartScroll}
+              showsVerticalScrollIndicator={false}>
+              <CartPanel
+                items={cartProducts}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveItem}
+                onScanFirst={handleDemoScan}
+              />
+            </ScrollView>
+          </Card>
+        </View>
       </Screen>
-
-      <CheckoutDock
-        subtotal={subtotal}
-        totalItems={totalItems}
-        hasItems={cartProducts.length > 0}
-        printerConnected={printerConnected}
-        onCheckout={handleCheckout}
-      />
 
       <ReceiptModal
         visible={Boolean(lastReceipt)}
@@ -456,11 +450,23 @@ const styles = StyleSheet.create({
   rowGap: {
     justifyContent: 'space-between',
   },
+  contentWrap: {
+    flex: 1,
+    gap: theme.spacing.md,
+  },
+  productsArea: {
+    flex: 1,
+  },
   listContent: {
-    paddingBottom: 180,
+    paddingBottom: theme.spacing.xl,
     gap: theme.spacing.lg,
   },
   cartCard: {
-    marginTop: theme.spacing.sm,
+    flexShrink: 1,
+    maxHeight: '45%',
+    padding: theme.spacing.md,
+  },
+  cartScroll: {
+    flexShrink: 1,
   },
 });

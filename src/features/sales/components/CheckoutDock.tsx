@@ -19,84 +19,77 @@ export function CheckoutDock({
   subtotal,
   totalItems,
   hasItems,
-  printerConnected,
   onCheckout,
 }: CheckoutDockProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
 
   return (
-    <View style={styles.dockWrap} pointerEvents="box-none">
-      <View style={styles.dock}>
-        <View style={styles.topRow}>
+    <View style={styles.dock}>
+      <View style={styles.topRow}>
+        <View style={styles.amountWrap}>
+          <Text style={styles.total}>{formatMoney(subtotal)}</Text>
           <View style={styles.metaBubble}>
             <Text style={styles.metaText}>
               {totalItems} item{totalItems === 1 ? '' : 's'}
             </Text>
           </View>
-          <Text style={styles.total}>{formatMoney(subtotal)}</Text>
         </View>
+        
+        <View style={styles.actionWrap}>
+          <Button
+            label="Checkout"
+            onPress={() => onCheckout(paymentMethod)}
+            disabled={!hasItems}
+          />
+        </View>
+      </View>
 
-        <View style={styles.paymentSelector}>
-          {paymentMethods.map(method => {
-            const active = paymentMethod === method;
-            return (
-              <Pressable
-                key={method}
-                onPress={() => setPaymentMethod(method)}
+      <View style={styles.paymentSelector}>
+        {paymentMethods.map(method => {
+          const active = paymentMethod === method;
+          return (
+            <Pressable
+              key={method}
+              onPress={() => setPaymentMethod(method)}
+              style={[
+                styles.paymentOption,
+                active ? styles.paymentOptionActive : null,
+              ]}>
+              <Text
                 style={[
-                  styles.paymentOption,
-                  active ? styles.paymentOptionActive : null,
+                  styles.paymentOptionText,
+                  active ? styles.paymentOptionTextActive : null,
                 ]}>
-                <Text
-                  style={[
-                    styles.paymentOptionText,
-                    active ? styles.paymentOptionTextActive : null,
-                  ]}>
-                  {method.toUpperCase()}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Button
-          label={hasItems ? `Checkout ${formatMoney(subtotal)}` : 'Checkout'}
-          onPress={() => onCheckout(paymentMethod)}
-          disabled={!hasItems}
-        />
+                {method.toUpperCase()}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  dockWrap: {
-    position: 'absolute',
-    left: theme.spacing.lg,
-    right: theme.spacing.lg,
-    bottom: 48,
-  },
   dock: {
-    backgroundColor: theme.colors.panel,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#E8EDF2',
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-    shadowColor: '#0B1522',
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    elevation: 8,
+    gap: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    marginBottom: theme.spacing.sm,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 4,
+  },
+  amountWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  actionWrap: {
+    minWidth: 120,
   },
   total: {
     fontSize: 28,
@@ -105,13 +98,13 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
   },
   metaBubble: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.panelMuted,
   },
   metaText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
     color: theme.colors.muted,
   },
