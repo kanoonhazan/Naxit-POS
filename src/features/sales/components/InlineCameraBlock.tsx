@@ -134,14 +134,18 @@ export function InlineCameraBlock({ sleepSeconds, onScanCode, paused }: InlineCa
             style={styles.camera}
             cameraType={CameraType.Back}
             scanBarcode
-            showFrame={false}
+            showFrame={true}
+            laserColor="#52E0A1"
+            frameColor="#52E0A1"
             onReadCode={event => handleReadCode(event.nativeEvent.codeStringValue)}
             onError={() => {
               setCamState('denied');
               setIsAwake(false);
             }}
           />
-          {/* Overlay: scan frame */}
+          {/* We keep the custom corners as a 'viewfinder' for the whole block, 
+              while the native frame inside provides the restricted scan zone. 
+              This gives a premium layered look. */}
           <View style={styles.frameOverlay} pointerEvents="none">
             <View style={styles.frameCornerTL} />
             <View style={styles.frameCornerTR} />
@@ -218,7 +222,7 @@ const CORNER_W = 2.5;
 const styles = StyleSheet.create({
   block: {
     width: '100%',
-    height: 110,
+    height: 180,
     borderRadius: theme.radius.md,
     overflow: 'hidden',
     backgroundColor: '#0D1F30',
