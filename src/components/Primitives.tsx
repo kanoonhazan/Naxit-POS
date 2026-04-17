@@ -24,8 +24,6 @@ type ButtonProps = {
 };
 
 type ScreenProps = {
-  title: string;
-  subtitle: string;
   children: React.ReactNode;
   headerAction?: React.ReactNode;
   bottomPadding?: number;
@@ -64,8 +62,6 @@ export function formatMoney(amount: number, currency = 'LKR') {
 }
 
 export function Screen({
-  title,
-  subtitle,
   children,
   headerAction,
   bottomPadding = 110,
@@ -75,13 +71,11 @@ export function Screen({
       <ScrollView
         contentContainerStyle={[styles.scrollContent, {paddingBottom: bottomPadding}]}
         showsVerticalScrollIndicator={false}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.screenTitle}>{title}</Text>
-            <Text style={styles.screenSubtitle}>{subtitle}</Text>
+        {headerAction ? (
+          <View style={[styles.headerRow, { justifyContent: 'flex-end' }]}>
+            {headerAction}
           </View>
-          {headerAction}
-        </View>
+        ) : null}
         {children}
       </ScrollView>
     </SafeAreaView>

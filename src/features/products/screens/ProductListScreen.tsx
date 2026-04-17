@@ -104,8 +104,6 @@ export function ProductListScreen() {
 
   return (
     <Screen
-      title="Products"
-      subtitle="Everything a cashier needs to create, edit, and label items without extra setup."
       headerAction={<Button label="Add item" onPress={openCreate} compact />}>
       <Card>
         <SectionTitle

@@ -75,9 +75,7 @@ export function ReportsScreen() {
   );
 
   return (
-    <Screen
-      title="Reports"
-      subtitle="Simple numbers first. Shop owners need confidence, not a finance dashboard.">
+    <Screen>
       <Card>
         <SectionTitle
           title="Today"

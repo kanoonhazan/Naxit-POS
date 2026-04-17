@@ -243,8 +243,6 @@ export function SalesScreen() {
       <FeedbackToast feedback={feedback} />
 
       <Screen
-        title="Sales"
-        subtitle="Built for one hand, fast scanning, and no wasted taps."
         bottomPadding={254}
         headerAction={
           <Tag

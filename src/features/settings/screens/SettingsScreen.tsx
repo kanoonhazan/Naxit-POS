@@ -111,9 +111,7 @@ export function SettingsScreen() {
   }
 
   return (
-    <Screen
-      title="Settings"
-      subtitle="Setup is deliberately short: store identity, printer, and offline behavior.">
+    <Screen>
       <Card>
         <SectionTitle
           title="Store details"

@@ -1,5 +1,5 @@
-import React, {useMemo, useState} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   Card,
@@ -10,9 +10,9 @@ import {
   StockPill,
   formatMoney,
 } from '../../../components/Primitives';
-import {useProductStore} from '../../../stores/useProductStore';
-import {useSalesStore} from '../../../stores/useSalesStore';
-import {theme} from '../../../theme';
+import { useProductStore } from '../../../stores/useProductStore';
+import { useSalesStore } from '../../../stores/useSalesStore';
+import { theme } from '../../../theme';
 
 export function InventoryScreen() {
   const products = useProductStore(state => state.products);
@@ -20,6 +20,7 @@ export function InventoryScreen() {
   const pushFeedback = useSalesStore(state => state.pushFeedback);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedStockFilter, setSelectedStockFilter] = useState<string | null>(null);
 
   const categories = useMemo(
     () => Array.from(new Set(products.map(p => p.category).filter(Boolean))),
@@ -28,10 +29,19 @@ export function InventoryScreen() {
 
   const filteredProducts = useMemo(
     () =>
-      products.filter(product =>
-        selectedCategory ? product.category === selectedCategory : true
-      ),
-    [products, selectedCategory]
+      products.filter(product => {
+        const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+        let matchesStock = true;
+        if (selectedStockFilter === 'Danger') {
+          matchesStock = product.stock <= 5;
+        } else if (selectedStockFilter === 'Low') {
+          matchesStock = product.stock > 5 && product.stock <= 12;
+        } else if (selectedStockFilter === 'Healthy') {
+          matchesStock = product.stock > 12;
+        }
+        return matchesCategory && matchesStock;
+      }),
+    [products, selectedCategory, selectedStockFilter]
   );
 
   const lowStock = filteredProducts.filter(product => product.stock <= 5);
@@ -52,9 +62,7 @@ export function InventoryScreen() {
   };
 
   return (
-    <Screen
-      title="Inventory"
-      subtitle="Use quick adjustments instead of deep forms. The goal is zero hesitation on the shop floor.">
+    <Screen>
       <Card>
         <SectionTitle
           title="Stock health"
@@ -76,13 +84,16 @@ export function InventoryScreen() {
             value={String(filteredProducts.length)}
           />
         </View>
-        {categories.length > 0 && (
-          <CategoryFilter
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
-        )}
+        <View style={styles.filterWrap}>
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Stock Level</Text>
+            <CategoryFilter
+              categories={['Danger', 'Low', 'Healthy']}
+              selectedCategory={selectedStockFilter}
+              onSelect={setSelectedStockFilter}
+            />
+          </View>
+        </View>
       </Card>
 
       {lowStock.length ? (
@@ -113,6 +124,19 @@ export function InventoryScreen() {
         </Card>
       )}
 
+      <View style={styles.filterWrap}>
+        {categories.length > 0 && (
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Product Category</Text>
+            <CategoryFilter
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onSelect={setSelectedCategory}
+            />
+          </View>
+        )}
+      </View>
+
       {filteredProducts.map(product => (
         <Card key={product.id}>
           <View style={styles.inventoryHeader}>
@@ -130,7 +154,7 @@ export function InventoryScreen() {
               <Pressable
                 key={`${product.id}-${delta}`}
                 onPress={() => handleAdjust(product.id, delta)}
-                style={({pressed}) => [
+                style={({ pressed }) => [
                   styles.adjustButton,
                   delta < 0 ? styles.adjustButtonDanger : null,
                   pressed ? styles.adjustPressed : null,
@@ -220,6 +244,18 @@ const styles = StyleSheet.create({
   adjustLabel: {
     fontSize: 15,
     fontWeight: '800',
+    color: theme.colors.ink,
+  },
+  filterWrap: {
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+  },
+  filterGroup: {
+    gap: 8,
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '700',
     color: theme.colors.ink,
   },
 });
