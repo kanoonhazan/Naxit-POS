@@ -1,6 +1,8 @@
+import {Platform} from 'react-native';
 import DocumentPicker from 'react-native-document-picker';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
+import ReactNativeBlobUtil from 'react-native-blob-util';
 
 import {loadSnapshot, restoreFromSnapshot} from '../database/posDb';
 import type {Product, Receipt, StoreSettings} from '../types';
@@ -86,22 +88,47 @@ export function validateBackup(data: BackupData): {valid: boolean; errors: strin
 }
 
 /**
- * Generates a backup file and opens the share dialog to let the user save it.
+ * Generates a backup file and opens the share dialog or saves to media store.
  */
 export async function saveBackupToDevice(): Promise<boolean> {
   try {
     const json = await exportBackup();
     const fileName = `naxit_pos_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-    const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
 
-    await RNFS.writeFile(filePath, json, 'utf8');
+    if (Platform.OS === 'android') {
+      const filePath = `${ReactNativeBlobUtil.fs.dirs.CacheDir}/${fileName}`;
+      await ReactNativeBlobUtil.fs.writeFile(filePath, json, 'utf8');
 
-    await Share.open({
-      url: `file://${filePath}`,
-      type: 'application/json',
-      title: 'Save POS Backup',
-      saveToFiles: true, // Specific for iOS but helps on Android too
-    });
+      const exists = await ReactNativeBlobUtil.fs.exists(filePath);
+      if (!exists) {
+        throw new Error(`Failed to create temp file at ${filePath}`);
+      }
+
+      console.log('[BACKUP] Saving to MediaStore:', filePath);
+      // On Android, we copy to the MediaStore (Downloads folder) for a better UX
+      await ReactNativeBlobUtil.MediaCollection.copyToMediaStore(
+        {
+          name: fileName,
+          mimeType: 'application/json',
+          parentFolder: '', // This is required by the native implementation
+        },
+        'Download',
+        filePath,
+      );
+      console.log('[BACKUP] File successfully copied to MediaStore');
+    } else {
+      const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+      await RNFS.writeFile(filePath, json, 'utf8');
+
+      console.log('[BACKUP] Opening share picker for iOS');
+      // On iOS, we use the Share picker with saveToFiles
+      await Share.open({
+        url: `file://${filePath}`,
+        type: 'application/json',
+        title: 'Save POS Backup',
+        saveToFiles: true,
+      });
+    }
 
     return true;
   } catch (error) {

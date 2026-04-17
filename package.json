@@ -17,6 +17,7 @@
     "postinstall-postinstall": "^2.1.0",
     "react": "19.2.3",
     "react-native": "0.85.1",
+    "react-native-blob-util": "^0.21.3",
     "react-native-camera-kit": "^17.0.1",
     "react-native-document-picker": "latest",
     "react-native-fs": "^2.20.0",
