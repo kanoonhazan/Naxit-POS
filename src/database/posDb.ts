@@ -141,3 +141,10 @@ export async function persistReceipt(receipt: Receipt) {
     storage.set(PRODUCTS_KEY, JSON.stringify(products));
   }
 }
+
+export async function restoreFromSnapshot(snapshot: Snapshot) {
+  storage.set(PRODUCTS_KEY, JSON.stringify(snapshot.products));
+  storage.set(RECEIPTS_KEY, JSON.stringify(snapshot.receipts));
+  storage.set(SETTINGS_KEY, JSON.stringify(snapshot.settings));
+  storage.set(SEED_KEY, true); // Mark as seeded since we have data
+}

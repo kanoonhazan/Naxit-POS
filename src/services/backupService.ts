@@ -1,4 +1,8 @@
-import {loadSnapshot} from '../database/posDb';
+import DocumentPicker from 'react-native-document-picker';
+import RNFS from 'react-native-fs';
+import Share from 'react-native-share';
+
+import {loadSnapshot, restoreFromSnapshot} from '../database/posDb';
 import type {Product, Receipt, StoreSettings} from '../types';
 
 type BackupData = {
@@ -79,4 +83,74 @@ export function validateBackup(data: BackupData): {valid: boolean; errors: strin
     valid: errors.length === 0,
     errors,
   };
+}
+
+/**
+ * Generates a backup file and opens the share dialog to let the user save it.
+ */
+export async function saveBackupToDevice(): Promise<boolean> {
+  try {
+    const json = await exportBackup();
+    const fileName = `naxit_pos_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+
+    await RNFS.writeFile(filePath, json, 'utf8');
+
+    await Share.open({
+      url: `file://${filePath}`,
+      type: 'application/json',
+      title: 'Save POS Backup',
+      saveToFiles: true, // Specific for iOS but helps on Android too
+    });
+
+    return true;
+  } catch (error) {
+    if (error instanceof Error && error.message === 'User did not share') {
+      return false;
+    }
+    console.error('[BACKUP] Failed to save backup:', error);
+    throw error;
+  }
+}
+
+/**
+ * Opens the file picker, reads the selected file, validates it, and restores data.
+ */
+export async function pickAndRestoreBackup(): Promise<{success: boolean; error?: string}> {
+  try {
+    const res = await DocumentPicker.pickSingle({
+      type: [DocumentPicker.types.allFiles, 'application/json'],
+      copyTo: 'cachesDirectory',
+    });
+
+    if (!res.fileCopyUri) {
+      return {success: false, error: 'Could not access file'};
+    }
+
+    const content = await RNFS.readFile(res.fileCopyUri, 'utf8');
+    const backup = parseBackup(content);
+
+    if (!backup) {
+      return {success: false, error: 'Invalid backup file format'};
+    }
+
+    const validation = validateBackup(backup);
+    if (!validation.valid) {
+      return {success: false, error: `Validation failed: ${validation.errors.join(', ')}`};
+    }
+
+    await restoreFromSnapshot({
+      products: backup.products,
+      receipts: backup.receipts,
+      settings: backup.settings,
+    });
+
+    return {success: true};
+  } catch (err) {
+    if (DocumentPicker.isCancel(err)) {
+      return {success: false};
+    }
+    console.error('[BACKUP] Restore failed:', err);
+    return {success: false, error: err instanceof Error ? err.message : 'Unknown error'};
+  }
 }

@@ -12,14 +12,21 @@ import {
 } from '../../../components/Primitives';
 import {useSettingsStore} from '../../../stores/useSettingsStore';
 import {useSalesStore} from '../../../stores/useSalesStore';
+import {useProductStore} from '../../../stores/useProductStore';
 import {testPrint} from '../../../services/receiptPrinter';
-import {exportBackup} from '../../../services/backupService';
+import {
+  saveBackupToDevice,
+  pickAndRestoreBackup,
+} from '../../../services/backupService';
 import {theme} from '../../../theme';
 
 export function SettingsScreen() {
   const settings = useSettingsStore(state => state.settings);
   const updateSettings = useSettingsStore(state => state.updateSettings);
+  const setSettings = useSettingsStore(state => state.setSettings);
   const pushFeedback = useSalesStore(state => state.pushFeedback);
+  const setReceipts = useSalesStore(state => state.setReceipts);
+  const setProducts = useProductStore(state => state.setProducts);
 
   const [storeName, setStoreName] = useState(settings?.storeName ?? '');
   const [subtitle, setSubtitle] = useState(settings?.storeSubtitle ?? '');
@@ -82,32 +89,62 @@ export function SettingsScreen() {
 
   const handleExportBackup = async () => {
     try {
-      const json = await exportBackup();
-      // In production, use Share API or FileSystem to save
-      console.log('[BACKUP] Data exported:', json.length, 'bytes');
-      Alert.alert(
-        'Backup ready',
-        `Exported ${json.length} bytes of local data. In production, this would be saved as a file or shared.`,
-      );
-      pushFeedback(
-        'success',
-        'Backup created',
-        'All local data has been exported as JSON.',
-      );
-    } catch {
+      const success = await saveBackupToDevice();
+      if (success) {
+        pushFeedback(
+          'success',
+          'Backup Created',
+          'Database snapshot saved to your device.',
+        );
+      }
+    } catch (error) {
       pushFeedback(
         'danger',
-        'Backup failed',
-        'Could not export the local database.',
+        'Backup Failed',
+        error instanceof Error ? error.message : 'Could not save backup file.',
       );
     }
   };
 
   const handleRestoreBackup = () => {
     Alert.alert(
-      'Restore backup',
-      'In production, this would open a file picker to select a backup JSON file. The data would then be validated and imported into the local database.',
-      [{text: 'OK'}],
+      'Restore Backup',
+      'This will overwrite all current local data (products, receipts, settings). Are you sure?',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Restore',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await pickAndRestoreBackup();
+              if (result.success) {
+                // Refresh local stores from the new database state
+                const {loadSnapshot} = await import('../../../database/posDb');
+                const snapshot = await loadSnapshot();
+
+                setProducts(snapshot.products);
+                setReceipts(snapshot.receipts);
+                setSettings(snapshot.settings);
+
+                pushFeedback(
+                  'success',
+                  'Restore Successful',
+                  'Local database has been updated with backup data.',
+                );
+              } else if (result.error) {
+                pushFeedback('danger', 'Restore Failed', result.error);
+              }
+            } catch (error) {
+              pushFeedback(
+                'danger',
+                'Restore Failed',
+                error instanceof Error ? error.message : 'Unknown error',
+              );
+            }
+          },
+        },
+      ],
     );
   };
 

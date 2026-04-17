@@ -8,18 +8,24 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.85.1",
+    "patch-package": "^8.0.1",
+    "postinstall-postinstall": "^2.1.0",
     "react": "19.2.3",
     "react-native": "0.85.1",
     "react-native-camera-kit": "^17.0.1",
+    "react-native-document-picker": "latest",
+    "react-native-fs": "^2.20.0",
     "react-native-mmkv": "^4.3.1",
     "react-native-nitro-modules": "^0.35.4",
     "react-native-permissions": "^5.5.1",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-safe-area-context": "^5.5.2",
+    "react-native-share": "^12.2.6",
     "react-native-svg": "^15.15.4",
     "zustand": "^5.0.12"
   },
