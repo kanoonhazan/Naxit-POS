@@ -30,6 +30,9 @@ export function SettingsScreen() {
   const [printerConnected, setPrinterConnected] = useState(
     settings?.printerConnected ?? false,
   );
+  const [cameraSleep, setCameraSleep] = useState(
+    String(settings?.cameraSleepSeconds ?? 8),
+  );
 
   const handleSaveStore = () => {
     updateSettings({
@@ -44,10 +47,12 @@ export function SettingsScreen() {
   };
 
   const handleSavePrinter = () => {
+    const sleepNum = Math.max(3, Math.min(60, parseInt(cameraSleep, 10) || 8));
     updateSettings({
       printerName,
       printerConnected,
       autoPrint,
+      cameraSleepSeconds: sleepNum,
     });
     pushFeedback(
       'success',
@@ -160,6 +165,13 @@ export function SettingsScreen() {
           hint="Print instantly right after checkout."
           value={autoPrint}
           onValueChange={value => setAutoPrint(value)}
+        />
+        <TextField
+          label="Camera sleep timer (seconds)"
+          value={cameraSleep}
+          onChangeText={setCameraSleep}
+          placeholder="8"
+          keyboardType="numeric"
         />
         <View style={styles.settingsActions}>
           <Button label="Save printer setup" onPress={handleSavePrinter} />

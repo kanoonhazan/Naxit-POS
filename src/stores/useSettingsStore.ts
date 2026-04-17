@@ -25,6 +25,7 @@ const defaultSettings: StoreSettings = {
   printerConnected: true,
   autoPrint: true,
   currency: 'LKR',
+  cameraSleepSeconds: 8,
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({

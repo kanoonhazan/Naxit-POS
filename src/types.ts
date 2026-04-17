@@ -51,4 +51,5 @@ export type StoreSettings = {
   printerConnected: boolean;
   autoPrint: boolean;
   currency: string;
+  cameraSleepSeconds: number;
 };

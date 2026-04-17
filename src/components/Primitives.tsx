@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Animated,
   Modal,
@@ -10,10 +10,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {theme} from '../theme';
-import type {SalesFeedback} from '../types';
+import { theme } from '../theme';
+import type { SalesFeedback } from '../types';
 
 type ButtonProps = {
   label: string;
@@ -71,7 +71,7 @@ export function Screen({
   const content = (
     <>
       {headerAction ? (
-        <View style={[styles.headerRow, {justifyContent: 'flex-end'}]}>
+        <View style={[styles.headerRow, { justifyContent: 'flex-end' }]}>
           {headerAction}
         </View>
       ) : null}
@@ -85,13 +85,13 @@ export function Screen({
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            {paddingBottom: bottomPadding},
+            { paddingBottom: bottomPadding },
           ]}
           showsVerticalScrollIndicator={false}>
           {content}
         </ScrollView>
       ) : (
-        <View style={[styles.scrollContent, {flex: 1, paddingBottom: bottomPadding}]}>
+        <View style={[styles.scrollContent, { flex: 1, paddingBottom: bottomPadding }]}>
           {content}
         </View>
       )}
@@ -140,7 +140,7 @@ export function Button({
     <Pressable
       disabled={disabled}
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.buttonBase,
         compact ? styles.buttonCompact : null,
         variant === 'primary' ? styles.buttonPrimary : null,
@@ -184,7 +184,7 @@ export function MetricCard({
   );
 }
 
-export function StockPill({stock}: {stock: number}) {
+export function StockPill({ stock }: { stock: number }) {
   const tone =
     stock <= 5 ? 'danger' : stock <= 12 ? 'warning' : 'success';
 
@@ -289,7 +289,7 @@ export function TextField({
 }: InputProps) {
   return (
     <View style={styles.fieldWrap}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+      {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -328,7 +328,7 @@ export function ToggleRow({
   );
 }
 
-export function FeedbackToast({feedback}: {feedback: SalesFeedback | null}) {
+export function FeedbackToast({ feedback }: { feedback: SalesFeedback | null }) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-10)).current;
 
@@ -380,7 +380,7 @@ export function FeedbackToast({feedback}: {feedback: SalesFeedback | null}) {
         feedback.tone === 'danger' ? styles.toastDanger : null,
         {
           opacity,
-          transform: [{translateY}],
+          transform: [{ translateY }],
         },
       ]}>
       <Text style={styles.toastTitle}>{feedback.title}</Text>
@@ -448,7 +448,7 @@ export function QrPreview({
   }
 
   // Fallback decorative preview
-  const blocks = Array.from({length: 81}, (_, index) => {
+  const blocks = Array.from({ length: 81 }, (_, index) => {
     const row = Math.floor(index / 9);
     const col = index % 9;
     const isFinder =
@@ -466,7 +466,7 @@ export function QrPreview({
           key={`block-${index}`}
           style={[
             styles.qrBlock,
-            active ? {backgroundColor: accent} : styles.qrBlockEmpty,
+            active ? { backgroundColor: accent } : styles.qrBlockEmpty,
           ]}
         />
       ))}

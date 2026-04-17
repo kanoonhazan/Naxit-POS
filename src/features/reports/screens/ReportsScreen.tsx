@@ -1,7 +1,8 @@
-import React, {useMemo} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React, {useMemo, useState} from 'react';
+import {Pressable, StyleSheet, Text, View} from 'react-native';
 
 import {
+  Button,
   Card,
   MetricCard,
   Screen,
@@ -13,6 +14,7 @@ import {useProductStore} from '../../../stores/useProductStore';
 import {useSalesStore} from '../../../stores/useSalesStore';
 import {useSettingsStore} from '../../../stores/useSettingsStore';
 import {theme} from '../../../theme';
+import {TransactionHistoryScreen} from './TransactionHistoryScreen';
 
 function sameDay(left: Date, right: Date) {
   return (
@@ -22,12 +24,19 @@ function sameDay(left: Date, right: Date) {
   );
 }
 
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+}
+
 export function ReportsScreen() {
   const products = useProductStore(state => state.products);
   const receipts = useSalesStore(state => state.receipts);
   const currency = useSettingsStore(
     state => state.settings?.currency ?? 'LKR',
   );
+
+  const [showHistory, setShowHistory] = useState(false);
 
   const today = new Date();
 
@@ -74,6 +83,11 @@ export function ReportsScreen() {
     1,
   );
 
+  // Show the full history screen as an overlay
+  if (showHistory) {
+    return <TransactionHistoryScreen onBack={() => setShowHistory(false)} />;
+  }
+
   return (
     <Screen>
       <Card>
@@ -96,35 +110,75 @@ export function ReportsScreen() {
         </View>
       </Card>
 
-      <Card>
-        <SectionTitle
-          title="7 day trend"
-          detail="Big bars, clear labels, no chart clutter."
-        />
-        <View style={styles.chartWrap}>
-          {chartData.map(item => (
-            <View key={item.label} style={styles.chartRow}>
-              <Text style={styles.chartLabel}>{item.label}</Text>
-              <View style={styles.chartTrack}>
-                <View
-                  style={[
-                    styles.chartBar,
-                    {
-                      width: `${Math.max(
-                        (item.amount / maxChartAmount) * 100,
-                        4,
-                      )}%`,
-                    },
-                  ]}
-                />
+      {/* 7-day trend + Today's transactions side by side */}
+      <View style={styles.twoCol}>
+        <Card style={styles.colFlex}>
+          <SectionTitle
+            title="7 day trend"
+            detail="Clear bars, no clutter."
+          />
+          <View style={styles.chartWrap}>
+            {chartData.map(item => (
+              <View key={item.label} style={styles.chartRow}>
+                <Text style={styles.chartLabel}>{item.label}</Text>
+                <View style={styles.chartTrack}>
+                  <View
+                    style={[
+                      styles.chartBar,
+                      {
+                        width: `${Math.max(
+                          (item.amount / maxChartAmount) * 100,
+                          4,
+                        )}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.chartAmount}>
+                  {formatMoney(item.amount, currency)}
+                </Text>
               </View>
-              <Text style={styles.chartAmount}>
-                {formatMoney(item.amount, currency)}
-              </Text>
+            ))}
+          </View>
+        </Card>
+
+        <Card style={styles.colFlex}>
+          <SectionTitle
+            title="Today's sales"
+            detail={`${todayReceipts.length} transaction${todayReceipts.length === 1 ? '' : 's'} so far.`}
+          />
+          {todayReceipts.length === 0 ? (
+            <View style={styles.emptyHistory}>
+              <Text style={styles.emptyHistoryText}>No sales yet today.</Text>
             </View>
-          ))}
-        </View>
-      </Card>
+          ) : (
+            <View style={styles.historyList}>
+              {todayReceipts.slice(0, 4).map(receipt => (
+                <View key={receipt.id} style={styles.historyRow}>
+                  <View style={styles.historyLeft}>
+                    <Text style={styles.historyNum}>#{receipt.number}</Text>
+                    <Text style={styles.historyTime}>{formatTime(receipt.issuedAt)}</Text>
+                  </View>
+                  <Text style={styles.historyAmount}>
+                    {formatMoney(receipt.total, currency)}
+                  </Text>
+                </View>
+              ))}
+              {todayReceipts.length > 4 && (
+                <Text style={styles.moreNote}>
+                  +{todayReceipts.length - 4} more…
+                </Text>
+              )}
+            </View>
+          )}
+          <Button
+            label="View full history"
+            variant="secondary"
+            compact
+            onPress={() => setShowHistory(true)}
+          />
+        </Card>
+      </View>
 
       <Card>
         <SectionTitle
@@ -151,8 +205,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: theme.spacing.sm,
   },
+  twoCol: {
+    flexDirection: 'row',
+    gap: theme.spacing.lg,
+    flexWrap: 'wrap',
+  },
+  colFlex: {
+    flex: 1,
+    minWidth: 240,
+  },
   chartWrap: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   chartRow: {
     flexDirection: 'row',
@@ -160,14 +223,14 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   chartLabel: {
-    width: 42,
-    fontSize: 13,
+    width: 36,
+    fontSize: 12,
     fontWeight: '700',
     color: theme.colors.ink,
   },
   chartTrack: {
     flex: 1,
-    height: 18,
+    height: 14,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.panelMuted,
     overflow: 'hidden',
@@ -178,10 +241,52 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
   },
   chartAmount: {
-    width: 84,
+    width: 76,
     textAlign: 'right',
+    fontSize: 11,
+    color: theme.colors.muted,
+  },
+  historyList: {
+    gap: 6,
+  },
+  historyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  historyLeft: {
+    gap: 1,
+  },
+  historyNum: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.colors.ink,
+  },
+  historyTime: {
+    fontSize: 11,
+    color: theme.colors.muted,
+  },
+  historyAmount: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: theme.colors.ink,
+  },
+  emptyHistory: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  emptyHistoryText: {
+    fontSize: 13,
+    color: theme.colors.muted,
+  },
+  moreNote: {
     fontSize: 12,
     color: theme.colors.muted,
+    textAlign: 'center',
+    paddingVertical: 4,
   },
   insightCard: {
     padding: theme.spacing.lg,
@@ -200,3 +305,4 @@ const styles = StyleSheet.create({
     color: theme.colors.ink,
   },
 });
+

@@ -107,6 +107,7 @@ export function ProductListScreen() {
       <SectionTitle
         title="Product manager"
         detail="Search once, edit fast, generate a QR label right away."
+        action={<Button label="Add item" onPress={openCreate} compact />}
       />
       <TextField
         label="Search products"
@@ -136,10 +137,7 @@ export function ProductListScreen() {
   );
 
   return (
-    <Screen
-      scrollEnabled={false}
-      bottomPadding={0}
-      headerAction={<Button label="Add item" onPress={openCreate} compact />}>
+    <Screen scrollEnabled={false} bottomPadding={0}>
       <FlatList
         data={filteredProducts}
         keyExtractor={item => item.id}

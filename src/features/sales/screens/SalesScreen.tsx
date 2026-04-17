@@ -1,5 +1,5 @@
-import React, {useMemo, useState} from 'react';
-import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   Button,
@@ -12,21 +12,21 @@ import {
   TextField,
   formatMoney,
 } from '../../../components/Primitives';
-import {useCartStore} from '../../../stores/useCartStore';
-import {useProductStore} from '../../../stores/useProductStore';
-import {useSalesStore} from '../../../stores/useSalesStore';
-import {useSettingsStore} from '../../../stores/useSettingsStore';
+import { useCartStore } from '../../../stores/useCartStore';
+import { useProductStore } from '../../../stores/useProductStore';
+import { useSalesStore } from '../../../stores/useSalesStore';
+import { useSettingsStore } from '../../../stores/useSettingsStore';
 import {
   formatReceiptText,
   printReceipt,
 } from '../../../services/receiptPrinter';
-import {theme} from '../../../theme';
-import type {PaymentMethod, Product} from '../../../types';
+import { theme } from '../../../theme';
+import type { PaymentMethod, Product } from '../../../types';
 
-import {CartPanel} from '../components/CartPanel';
-import {CheckoutDock} from '../components/CheckoutDock';
-import {ReceiptModal} from '../components/ReceiptModal';
-import {ScannerModal} from '../components/ScannerModal';
+import { CartPanel } from '../components/CartPanel';
+import { CheckoutDock } from '../components/CheckoutDock';
+import { InlineCameraBlock } from '../components/InlineCameraBlock';
+import { ReceiptModal } from '../components/ReceiptModal';
 
 export function SalesScreen() {
   const products = useProductStore(state => state.products);
@@ -50,7 +50,6 @@ export function SalesScreen() {
 
   const settings = useSettingsStore(state => state.settings);
 
-  const [scannerVisible, setScannerVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -85,7 +84,7 @@ export function SalesScreen() {
             lineTotal: item.quantity * product.price,
           };
         })
-        .filter(Boolean) as (Product & {quantity: number; lineTotal: number})[],
+        .filter(Boolean) as (Product & { quantity: number; lineTotal: number })[],
     [cartItems, getProductById],
   );
 
@@ -241,7 +240,7 @@ export function SalesScreen() {
     // Auto-print if enabled
     if (settings.autoPrint && settings.printerConnected) {
       const escPos = formatReceiptText(receipt, settings);
-      printReceipt(escPos).catch(() => {});
+      printReceipt(escPos).catch(() => { });
     }
 
     pushFeedback(
@@ -257,16 +256,26 @@ export function SalesScreen() {
 
   const listHeader = (
     <View style={styles.headerGap}>
-      <View style={styles.actionBar}>
-        <View style={styles.searchWrap}>
+      <View style={styles.findGroup}>
+        <View style={styles.quickFindRow}>
+          <Text style={styles.quickFindLabel}>Quick find</Text>
+          <Tag
+            label={printerConnected ? 'Printer ready' : 'Printer offline'}
+            tone={printerConnected ? 'success' : 'warning'}
+          />
+        </View>
+        <View style={styles.actionBar}>
           <TextField
-            label="Quick find"
+            label=""
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search by name or code"
           />
+          <InlineCameraBlock
+            sleepSeconds={settings?.cameraSleepSeconds ?? 8}
+            onScanCode={handleScanCode}
+          />
         </View>
-        <Button label="Scan QR" onPress={() => setScannerVisible(true)} />
       </View>
 
       {categories.length > 0 && (
@@ -304,14 +313,8 @@ export function SalesScreen() {
 
       <Screen
         scrollEnabled={false}
-        bottomPadding={0}
-        headerAction={
-          <Tag
-            label={printerConnected ? 'Printer ready' : 'Printer offline'}
-            tone={printerConnected ? 'success' : 'warning'}
-          />
-        }>
-        
+        bottomPadding={0}>
+
         <FlatList
           data={filteredProducts}
           keyExtractor={item => item.id}
@@ -321,24 +324,24 @@ export function SalesScreen() {
           columnWrapperStyle={styles.rowGap}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          renderItem={({item: product}) => {
+          renderItem={({ item: product }) => {
             const isOutOfStock = product.stock <= 0;
             return (
               <Pressable
                 onPress={() => !isOutOfStock && handleAddToCart(product.id)}
-                style={({pressed}) => [
+                style={({ pressed }) => [
                   styles.productTile,
-                  {borderColor: isOutOfStock ? theme.colors.border : product.color},
+                  { borderColor: isOutOfStock ? theme.colors.border : product.color },
                   pressed && !isOutOfStock ? styles.productTilePressed : null,
                   isOutOfStock ? styles.productTileDisabled : null,
                 ]}>
                 <View
                   style={[
                     styles.productTileBadge,
-                    {backgroundColor: isOutOfStock ? theme.colors.muted : product.color},
+                    { backgroundColor: isOutOfStock ? theme.colors.muted : product.color },
                   ]}
                 />
-                <Text style={[styles.productTileName, isOutOfStock && {color: theme.colors.muted}]}>
+                <Text style={[styles.productTileName, isOutOfStock && { color: theme.colors.muted }]}>
                   {product.name}
                 </Text>
                 <View style={styles.productTileFooter}>
@@ -370,13 +373,6 @@ export function SalesScreen() {
         storeName={settings?.storeName ?? 'POS'}
         onClose={clearLastReceipt}
       />
-
-      <ScannerModal
-        visible={scannerVisible}
-        onClose={() => setScannerVisible(false)}
-        onScanCode={handleScanCode}
-        onDemoScan={handleDemoScan}
-      />
     </View>
   );
 }
@@ -385,13 +381,22 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  actionBar: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: theme.spacing.md,
+  findGroup: {
+    rowGap: theme.spacing.sm,
   },
-  searchWrap: {
-    flex: 1,
+  quickFindRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  quickFindLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: theme.colors.ink,
+  },
+  actionBar: {
+    flexDirection: 'column',
+    gap: theme.spacing.sm,
   },
   productGrid: {
     flexDirection: 'row',
@@ -409,7 +414,7 @@ const styles = StyleSheet.create({
     shadowColor: '#0B1522',
     shadowOpacity: 0.04,
     shadowRadius: 8,
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
   productTilePressed: {
