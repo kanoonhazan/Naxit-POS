@@ -254,39 +254,7 @@ export function SalesScreen() {
 
   const printerConnected = settings?.printerConnected ?? false;
 
-  const listHeader = (
-    <View style={styles.headerGap}>
-      <View style={styles.findGroup}>
-        <View style={styles.quickFindRow}>
-          <Text style={styles.quickFindLabel}>Quick find</Text>
-          <Tag
-            label={printerConnected ? 'Printer ready' : 'Printer offline'}
-            tone={printerConnected ? 'success' : 'warning'}
-          />
-        </View>
-        <View style={styles.actionBar}>
-          <TextField
-            label=""
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search by name or code"
-          />
-          <InlineCameraBlock
-            sleepSeconds={settings?.cameraSleepSeconds ?? 8}
-            onScanCode={handleScanCode}
-          />
-        </View>
-      </View>
-
-      {categories.length > 0 && (
-        <CategoryFilter
-          categories={categories}
-          selectedCategory={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
-      )}
-    </View>
-  );
+  const isSearching = searchQuery.length > 0 || selectedCategory !== null;
 
 
 
@@ -296,48 +264,72 @@ export function SalesScreen() {
 
       <Screen scrollEnabled={false} bottomPadding={100}>
         <View style={styles.contentWrap}>
-          <View style={styles.productsArea}>
-            <FlatList
-              data={filteredProducts}
-              keyExtractor={item => item.id}
-              ListHeaderComponent={listHeader}
-              numColumns={2}
-              columnWrapperStyle={styles.rowGap}
-              contentContainerStyle={styles.listContent}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item: product }) => {
-                const isOutOfStock = product.stock <= 0;
-                return (
-                  <Pressable
-                    onPress={() => !isOutOfStock && handleAddToCart(product.id)}
-                    style={({ pressed }) => [
-                      styles.productTile,
-                      { borderColor: isOutOfStock ? theme.colors.border : product.color },
-                      pressed && !isOutOfStock ? styles.productTilePressed : null,
-                      isOutOfStock ? styles.productTileDisabled : null,
-                    ]}>
-                    <View
-                      style={[
-                        styles.productTileBadge,
-                        { backgroundColor: isOutOfStock ? theme.colors.muted : product.color },
-                      ]}
-                    />
-                    <Text style={[styles.productTileName, isOutOfStock && { color: theme.colors.muted }]}>
-                      {product.name}
-                    </Text>
-                    <View style={styles.productTileFooter}>
+          <View style={styles.headerGap}>
+            <View style={styles.findGroup}>
+              <View style={styles.quickFindRow}>
+                <Text style={styles.quickFindLabel}>Quick find</Text>
+                <Tag
+                  label={printerConnected ? 'Printer ready' : 'Printer offline'}
+                  tone={printerConnected ? 'success' : 'warning'}
+                />
+              </View>
+              <View style={styles.actionBar}>
+                <TextField
+                  label=""
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Search by name or code"
+                />
+                <InlineCameraBlock
+                  sleepSeconds={settings?.cameraSleepSeconds ?? 8}
+                  onScanCode={handleScanCode}
+                  paused={isSearching}
+                />
+              </View>
+            </View>
+          </View>
+
+          {isSearching && (
+            <View style={styles.resultsOverlay}>
+              <FlatList
+                data={filteredProducts}
+                keyExtractor={item => item.id}
+                numColumns={1}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item: product }) => {
+                  const isOutOfStock = product.stock <= 0;
+                  return (
+                    <Pressable
+                      onPress={() => !isOutOfStock && handleAddToCart(product.id)}
+                      style={({ pressed }) => [
+                        styles.compactProductTile,
+                        pressed && !isOutOfStock ? styles.productTilePressed : null,
+                        isOutOfStock ? styles.productTileDisabled : null,
+                      ]}>
+                      <View
+                        style={[
+                          styles.productTileBadge,
+                          { backgroundColor: isOutOfStock ? theme.colors.muted : product.color },
+                        ]}
+                      />
+                      <View style={styles.compactProductInfo}>
+                        <Text style={[styles.productTileName, isOutOfStock && { color: theme.colors.muted, fontSize: 14 }]}>
+                          {product.name}
+                        </Text>
+                        <Text style={styles.productTileStock}>
+                          {product.stock} left
+                        </Text>
+                      </View>
                       <Text style={styles.productTilePrice}>
                         {formatMoney(product.price)}
                       </Text>
-                      <Text style={styles.productTileStock}>
-                        {product.stock} left
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              }}
-            />
-          </View>
+                    </Pressable>
+                  );
+                }}
+              />
+            </View>
+          )}
 
           <Card style={styles.cartCard}>
             <CheckoutDock
@@ -454,16 +446,41 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: theme.spacing.md,
   },
-  productsArea: {
+  resultsOverlay: {
+    position: 'absolute',
+    top: 100, // Positioned below search bar
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: theme.colors.panel,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    maxHeight: '60%',
+    shadowColor: '#0B1522',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  compactProductTile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.md,
+    gap: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  compactProductInfo: {
     flex: 1,
+    gap: 2,
   },
   listContent: {
     paddingBottom: theme.spacing.xl,
-    gap: theme.spacing.lg,
   },
   cartCard: {
-    flexShrink: 1,
-    maxHeight: '45%',
+    flex: 1,
     padding: theme.spacing.md,
   },
   cartScroll: {

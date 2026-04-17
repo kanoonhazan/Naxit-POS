@@ -27,11 +27,12 @@ type InlineCameraBlockProps = {
   /** Seconds of inactivity before camera sleeps. Comes from settings. */
   sleepSeconds: number;
   onScanCode: (code: string) => void;
+  paused?: boolean;
 };
 
 type CamState = 'idle' | 'requesting' | 'ready' | 'denied' | 'blocked' | 'unavailable';
 
-export function InlineCameraBlock({ sleepSeconds, onScanCode }: InlineCameraBlockProps) {
+export function InlineCameraBlock({ sleepSeconds, onScanCode, paused }: InlineCameraBlockProps) {
   const [camState, setCamState] = useState<CamState>('idle');
   const [isAwake, setIsAwake] = useState(false);
   const sleepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -61,6 +62,16 @@ export function InlineCameraBlock({ sleepSeconds, onScanCode }: InlineCameraBloc
       setIsAwake(false);
     }, sleepSeconds * 1000);
   }, [sleepSeconds]);
+
+  // Handle external pause (e.g. during search)
+  useEffect(() => {
+    if (paused) {
+      setIsAwake(false);
+      if (sleepTimer.current) {
+        clearTimeout(sleepTimer.current);
+      }
+    }
+  }, [paused]);
 
   const wake = useCallback(async () => {
     if (camState === 'idle' || camState === 'denied') {

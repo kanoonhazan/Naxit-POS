@@ -1,14 +1,14 @@
 import React from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import {theme} from '../theme';
-import type {TabKey} from '../types';
+import { theme } from '../theme';
+import type { TabKey } from '../types';
 
-const sideTabs: Array<{key: Exclude<TabKey, 'sales'>; label: string}> = [
-  {key: 'inventory', label: 'Inventory'},
-  {key: 'products', label: 'Products'},
-  {key: 'reports', label: 'Reports'},
-  {key: 'settings', label: 'Settings'},
+const sideTabs: Array<{ key: Exclude<TabKey, 'sales'>; label: string }> = [
+  { key: 'inventory', label: 'Inventory' },
+  { key: 'products', label: 'Products' },
+  { key: 'reports', label: 'Reports' },
+  { key: 'settings', label: 'Settings' },
 ];
 
 export function TabBar({
@@ -24,7 +24,7 @@ export function TabBar({
   const rightTabs = sideTabs.slice(2);
 
   return (
-    <View style={[styles.safeWrap, {paddingBottom: Math.max(bottomInset, 16)}]}>
+    <View style={[styles.safeWrap, { paddingBottom: Math.max(bottomInset, 16) }]}>
       <View style={styles.surface}>
         {leftTabs.map(tab => (
           <SideTab
@@ -38,7 +38,7 @@ export function TabBar({
 
         <Pressable
           onPress={() => onChange('sales')}
-          style={({pressed}) => [
+          style={({ pressed }) => [
             styles.centerTab,
             pressed ? styles.centerTabPressed : null,
             activeTab === 'sales' ? styles.centerTabActive : null,
@@ -72,7 +72,7 @@ function SideTab({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={({pressed}) => [styles.sideTab, pressed ? styles.sidePressed : null]}>
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.sideTab, pressed ? styles.sidePressed : null]}>
       <View style={[styles.iconFrame, active ? styles.iconFrameActive : null]}>
         <TabGlyph tab={tabKey} active={active} />
       </View>
@@ -96,7 +96,7 @@ function TabGlyph({
     return (
       <View style={styles.gridIcon}>
         {[0, 1, 2, 3].map(box => (
-          <View key={box} style={[styles.gridCell, {backgroundColor: ink}]} />
+          <View key={box} style={[styles.gridCell, { backgroundColor: ink }]} />
         ))}
       </View>
     );
@@ -104,8 +104,8 @@ function TabGlyph({
 
   if (tab === 'products') {
     return (
-      <View style={[styles.cardIcon, {borderColor: ink}]}>
-        <View style={[styles.cardStripe, {backgroundColor: ink}]} />
+      <View style={[styles.cardIcon, { borderColor: ink }]}>
+        <View style={[styles.cardStripe, { backgroundColor: ink }]} />
       </View>
     );
   }
@@ -113,16 +113,16 @@ function TabGlyph({
   if (tab === 'reports') {
     return (
       <View style={styles.reportIcon}>
-        <View style={[styles.reportBarShort, {backgroundColor: ink}]} />
-        <View style={[styles.reportBarMid, {backgroundColor: ink}]} />
-        <View style={[styles.reportBarTall, {backgroundColor: ink}]} />
+        <View style={[styles.reportBarShort, { backgroundColor: ink }]} />
+        <View style={[styles.reportBarMid, { backgroundColor: ink }]} />
+        <View style={[styles.reportBarTall, { backgroundColor: ink }]} />
       </View>
     );
   }
 
   return (
-    <View style={[styles.gearRing, {borderColor: ink}]}>
-      <View style={[styles.gearCore, {backgroundColor: ink}]} />
+    <View style={[styles.gearRing, { borderColor: ink }]}>
+      <View style={[styles.gearCore, { backgroundColor: ink }]} />
     </View>
   );
 }
@@ -131,8 +131,8 @@ function SalesGlyph() {
   const ink = theme.colors.panel;
   return (
     <View style={styles.salesGlyph}>
-      <View style={[styles.salesScanCorners, {borderColor: ink}]} />
-      <View style={[styles.salesCenterDot, {backgroundColor: ink}]} />
+      <View style={[styles.salesScanCorners, { borderColor: ink }]} />
+      <View style={[styles.salesCenterDot, { backgroundColor: ink }]} />
     </View>
   );
 }
@@ -173,11 +173,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
   },
   centerTabPressed: {
     opacity: 0.9,
-    transform: [{scale: 0.96}],
+    transform: [{ scale: 0.96 }],
   },
   centerTabActive: {
     borderWidth: 2,
@@ -198,12 +197,13 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: "hidden"
   },
   iconFrameActive: {
     backgroundColor: theme.colors.primarySoft,
   },
   sideLabel: {
-    fontSize: 11,
+    fontSize: 8,
     fontWeight: '700',
     color: '#96A4B5',
   },
