@@ -28,15 +28,12 @@ export function CheckoutDock({
     <View style={styles.dockWrap} pointerEvents="box-none">
       <View style={styles.dock}>
         <View style={styles.topRow}>
-          <View>
-            <Text style={styles.caption}>Ready to charge</Text>
-            <Text style={styles.total}>{formatMoney(subtotal)}</Text>
-          </View>
           <View style={styles.metaBubble}>
             <Text style={styles.metaText}>
               {totalItems} item{totalItems === 1 ? '' : 's'}
             </Text>
           </View>
+          <Text style={styles.total}>{formatMoney(subtotal)}</Text>
         </View>
 
         <View style={styles.paymentSelector}>
@@ -63,18 +60,10 @@ export function CheckoutDock({
         </View>
 
         <Button
-          label={
-            hasItems ? `Checkout ${formatMoney(subtotal)}` : 'Checkout'
-          }
+          label={hasItems ? `Checkout ${formatMoney(subtotal)}` : 'Checkout'}
           onPress={() => onCheckout(paymentMethod)}
           disabled={!hasItems}
         />
-
-        <Text style={styles.hint}>
-          {printerConnected
-            ? 'Receipt prints right after payment.'
-            : 'Receipt stays on screen until a printer is connected.'}
-        </Text>
       </View>
     </View>
   );
@@ -85,79 +74,75 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: theme.spacing.lg,
     right: theme.spacing.lg,
-    bottom: 108,
+    bottom: 48,
   },
   dock: {
     backgroundColor: theme.colors.panel,
-    borderRadius: 28,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
+    borderColor: '#E8EDF2',
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
     shadowColor: '#0B1522',
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 8,
     },
-    elevation: 7,
+    elevation: 8,
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: theme.spacing.md,
-  },
-  caption: {
-    fontSize: 12,
-    color: theme.colors.muted,
+    paddingHorizontal: 4,
   },
   total: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '900',
     color: theme.colors.ink,
-    letterSpacing: -0.8,
+    letterSpacing: -0.6,
   },
   metaBubble: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primarySoft,
+    backgroundColor: theme.colors.panelMuted,
   },
   metaText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
-    color: theme.colors.primary,
+    color: theme.colors.muted,
   },
   paymentSelector: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.panelMuted,
-    borderRadius: theme.radius.pill,
-    padding: 4,
-    gap: 4,
+    backgroundColor: '#EEF2F6',
+    borderRadius: theme.radius.md,
+    padding: 3,
+    gap: 3,
   },
   paymentOption: {
     flex: 1,
-    minHeight: 40,
-    borderRadius: theme.radius.pill,
+    minHeight: 38,
+    borderRadius: theme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   paymentOptionActive: {
     backgroundColor: theme.colors.panel,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 2,
   },
   paymentOptionText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '800',
-    color: theme.colors.muted,
+    color: '#95A4B5',
   },
   paymentOptionTextActive: {
-    color: theme.colors.primary,
-  },
-  hint: {
-    fontSize: 12,
-    textAlign: 'center',
-    color: theme.colors.muted,
+    color: theme.colors.ink,
   },
 });

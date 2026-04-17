@@ -4,10 +4,12 @@ import {Pressable, StyleSheet, Text, View} from 'react-native';
 import {
   Button,
   Card,
+  CategoryFilter,
   FeedbackToast,
   Screen,
   SectionTitle,
   Tag,
+  TextField,
   formatMoney,
 } from '../../../components/Primitives';
 import {useCartStore} from '../../../stores/useCartStore';
@@ -49,9 +51,25 @@ export function SalesScreen() {
   const settings = useSettingsStore(state => state.settings);
 
   const [scannerVisible, setScannerVisible] = useState(false);
-  const [scanIndex, setScanIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const featuredProducts = products.slice(0, 6);
+  const categories = useMemo(
+    () => Array.from(new Set(products.map(p => p.category).filter(Boolean))),
+    [products]
+  );
+
+  const filteredProducts = useMemo(
+    () =>
+      products.filter(product => {
+        const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+        const matchesQuery = `${product.name} ${product.category} ${product.code}`
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesQuery;
+      }),
+    [products, selectedCategory, searchQuery]
+  );
 
   const cartProducts = useMemo(
     () =>
@@ -128,7 +146,7 @@ export function SalesScreen() {
   };
 
   const handleDemoScan = () => {
-    if (featuredProducts.length === 0) {
+    if (products.length === 0) {
       pushFeedback(
         'warning',
         'No products yet',
@@ -137,8 +155,7 @@ export function SalesScreen() {
       return;
     }
 
-    const nextProduct = featuredProducts[scanIndex % featuredProducts.length];
-    setScanIndex(prev => prev + 1);
+    const nextProduct = products[Math.floor(Math.random() * products.length)];
     handleAddToCart(nextProduct.id, 'scan');
   };
 
@@ -243,132 +260,67 @@ export function SalesScreen() {
       <FeedbackToast feedback={feedback} />
 
       <Screen
-        bottomPadding={254}
+        bottomPadding={180}
         headerAction={
           <Tag
             label={printerConnected ? 'Printer ready' : 'Printer offline'}
             tone={printerConnected ? 'success' : 'warning'}
           />
         }>
-        <Card style={styles.speedLaneCard}>
-          <View style={styles.speedLaneHeader}>
-            <View style={styles.speedLaneTextWrap}>
-              <Text style={styles.speedLaneEyebrow}>Fastest flow</Text>
-              <Text style={styles.speedLaneTitle}>
-                Scan to paid receipt in one lane
-              </Text>
-              <Text style={styles.speedLaneBody}>
-                QR scan adds instantly. Cart stays visible. Checkout stays fixed
-                at the bottom.
-              </Text>
-            </View>
-            <Tag label="< 5 sec target" tone="success" />
+        <View style={styles.actionBar}>
+          <View style={styles.searchWrap}>
+            <TextField
+              label="Quick find"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search by name or code"
+            />
           </View>
+          <Button label="Scan QR" onPress={() => setScannerVisible(true)} />
+        </View>
 
-          <View style={styles.stepStrip}>
-            {['Scan', 'Cart', 'Pay', 'Receipt'].map((step, index) => (
-              <View key={step} style={styles.stepItem}>
-                <View style={styles.stepDot}>
-                  <Text style={styles.stepDotText}>{index + 1}</Text>
-                </View>
-                <Text style={styles.stepLabel}>{step}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.scanStage}>
-            <View style={styles.scanFrame}>
-              <View style={styles.scanPulse} />
-              <View style={styles.scanTarget}>
-                <View style={styles.scanCornerTopLeft} />
-                <View style={styles.scanCornerTopRight} />
-                <View style={styles.scanCornerBottomLeft} />
-                <View style={styles.scanCornerBottomRight} />
-                <Text style={styles.scanTargetText}>Ready for QR</Text>
-                <Text style={styles.scanTargetHint}>
-                  Center the code and tap once.
-                </Text>
-              </View>
-            </View>
-
-            <Pressable
-              onPress={() => setScannerVisible(true)}
-              style={({pressed}) => [
-                styles.scanButton,
-                pressed ? styles.scanButtonPressed : null,
-              ]}>
-              <View style={styles.scanButtonGlyph}>
-                <View style={styles.scanButtonGlyphFrame} />
-                <View style={styles.scanButtonGlyphDot} />
-              </View>
-              <View style={styles.scanButtonTextWrap}>
-                <Text style={styles.scanButtonTitle}>Scan with camera</Text>
-                <Text style={styles.scanButtonSubtitle}>
-                  Instant product add on device
-                </Text>
-              </View>
-            </Pressable>
-
-            <View style={styles.fallbackRow}>
-              <Button
-                label="Demo scan"
-                onPress={handleDemoScan}
-                variant="secondary"
-                compact
-              />
-              <Text style={styles.fallbackHint}>
-                Use this in simulator when no real QR is available.
-              </Text>
-            </View>
-
-            <View style={styles.microFeedbackRow}>
-              <View style={styles.microFeedbackCard}>
-                <Text style={styles.microFeedbackLabel}>Last action</Text>
-                <Text style={styles.microFeedbackValue}>
-                  {lastItem
-                    ? `${lastItem.name} added`
-                    : 'Waiting for first scan'}
-                </Text>
-              </View>
-              <View style={styles.microFeedbackCard}>
-                <Text style={styles.microFeedbackLabel}>Cart count</Text>
-                <Text style={styles.microFeedbackValue}>
-                  {totalItems} items
-                </Text>
-              </View>
-            </View>
-          </View>
-        </Card>
-
-        <Card>
-          <SectionTitle
-            title="Quick add"
-            detail="Use this if the cashier already knows the item and wants to skip camera time."
+        {categories.length > 0 && (
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelect={setSelectedCategory}
           />
-          <View style={styles.quickGrid}>
-            {featuredProducts.slice(0, 4).map(product => (
+        )}
+
+        <View style={styles.productGrid}>
+          {filteredProducts.map(product => {
+            const isOutOfStock = product.stock <= 0;
+            return (
               <Pressable
                 key={product.id}
-                onPress={() => handleAddToCart(product.id)}
+                onPress={() => !isOutOfStock && handleAddToCart(product.id)}
                 style={({pressed}) => [
-                  styles.quickTile,
-                  {borderColor: product.color},
-                  pressed ? styles.quickTilePressed : null,
+                  styles.productTile,
+                  {borderColor: isOutOfStock ? theme.colors.border : product.color},
+                  pressed && !isOutOfStock ? styles.productTilePressed : null,
+                  isOutOfStock ? styles.productTileDisabled : null,
                 ]}>
                 <View
                   style={[
-                    styles.quickTileBadge,
-                    {backgroundColor: product.color},
+                    styles.productTileBadge,
+                    {backgroundColor: isOutOfStock ? theme.colors.muted : product.color},
                   ]}
                 />
-                <Text style={styles.quickTileName}>{product.name}</Text>
-                <Text style={styles.quickTilePrice}>
-                  {formatMoney(product.price)}
+                <Text style={[styles.productTileName, isOutOfStock && {color: theme.colors.muted}]}>
+                  {product.name}
                 </Text>
+                <View style={styles.productTileFooter}>
+                  <Text style={styles.productTilePrice}>
+                    {formatMoney(product.price)}
+                  </Text>
+                  <Text style={styles.productTileStock}>
+                    {product.stock} left
+                  </Text>
+                </View>
               </Pressable>
-            ))}
-          </View>
-        </Card>
+            );
+          })}
+        </View>
 
         <Card>
           <SectionTitle
@@ -418,254 +370,62 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  speedLaneCard: {
-    backgroundColor: theme.colors.black,
-    borderColor: theme.colors.black,
-    gap: theme.spacing.lg,
-  },
-  speedLaneHeader: {
+  actionBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'flex-end',
     gap: theme.spacing.md,
   },
-  speedLaneTextWrap: {
+  searchWrap: {
     flex: 1,
-    gap: 6,
   },
-  speedLaneEyebrow: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#9CC0FF',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  speedLaneTitle: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: theme.colors.panel,
-    letterSpacing: -0.8,
-  },
-  speedLaneBody: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#B9C7D8',
-  },
-  stepStrip: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  stepItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    borderRadius: theme.radius.md,
-    backgroundColor: '#16273A',
-  },
-  stepDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#386FC7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepDotText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: theme.colors.panel,
-  },
-  stepLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#DAE6F4',
-  },
-  scanStage: {
-    gap: theme.spacing.md,
-  },
-  scanFrame: {
-    minHeight: 190,
-    borderRadius: 28,
-    backgroundColor: '#112033',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  scanPulse: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(57, 111, 199, 0.18)',
-  },
-  scanTarget: {
-    width: '76%',
-    aspectRatio: 1.1,
-    maxHeight: 150,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#3D6BA8',
-    backgroundColor: '#152B42',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scanCornerTopLeft: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    width: 24,
-    height: 24,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderColor: '#8EC1FF',
-  },
-  scanCornerTopRight: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 24,
-    height: 24,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-    borderColor: '#8EC1FF',
-  },
-  scanCornerBottomLeft: {
-    position: 'absolute',
-    bottom: 14,
-    left: 14,
-    width: 24,
-    height: 24,
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-    borderColor: '#8EC1FF',
-  },
-  scanCornerBottomRight: {
-    position: 'absolute',
-    bottom: 14,
-    right: 14,
-    width: 24,
-    height: 24,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderColor: '#8EC1FF',
-  },
-  scanTargetText: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: theme.colors.panel,
-  },
-  scanTargetHint: {
-    marginTop: 6,
-    fontSize: 13,
-    color: '#ADC3DB',
-  },
-  scanButton: {
-    minHeight: 72,
-    borderRadius: 24,
-    backgroundColor: '#386FC7',
-    paddingHorizontal: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  scanButtonPressed: {
-    opacity: 0.88,
-  },
-  scanButtonGlyph: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scanButtonGlyphFrame: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: theme.colors.panel,
-  },
-  scanButtonGlyphDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: theme.colors.panel,
-  },
-  scanButtonTextWrap: {
-    flex: 1,
-    gap: 2,
-  },
-  scanButtonTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: theme.colors.panel,
-  },
-  scanButtonSubtitle: {
-    fontSize: 13,
-    color: '#D8E8FF',
-  },
-  fallbackRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  fallbackHint: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
-    color: '#AFC5DB',
-  },
-  microFeedbackRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm,
-  },
-  microFeedbackCard: {
-    flex: 1,
-    backgroundColor: '#172C43',
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
-    gap: 6,
-  },
-  microFeedbackLabel: {
-    fontSize: 12,
-    color: '#9FB6CE',
-  },
-  microFeedbackValue: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: theme.colors.panel,
-  },
-  quickGrid: {
+  productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.sm,
   },
-  quickTile: {
+  productTile: {
     width: '48%',
-    backgroundColor: theme.colors.panelMuted,
+    backgroundColor: theme.colors.panel,
     borderWidth: 1,
     borderRadius: theme.radius.md,
     padding: theme.spacing.md,
     gap: 8,
+    shadowColor: '#0B1522',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: {width: 0, height: 4},
+    elevation: 2,
   },
-  quickTilePressed: {
-    opacity: 0.82,
+  productTilePressed: {
+    opacity: 0.75,
   },
-  quickTileBadge: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  productTileDisabled: {
+    opacity: 0.5,
+    backgroundColor: theme.colors.panelMuted,
   },
-  quickTileName: {
-    fontSize: 15,
+  productTileBadge: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
+  productTileName: {
+    fontSize: 16,
     fontWeight: '800',
     color: theme.colors.ink,
   },
-  quickTilePrice: {
-    fontSize: 13,
+  productTileFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  productTilePrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.ink,
+  },
+  productTileStock: {
+    fontSize: 12,
     color: theme.colors.muted,
   },
 });
