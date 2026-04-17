@@ -1,8 +1,9 @@
-import React from 'react';
+import React, {useMemo, useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 
 import {
   Card,
+  CategoryFilter,
   MetricCard,
   Screen,
   SectionTitle,
@@ -18,8 +19,23 @@ export function InventoryScreen() {
   const adjustStock = useProductStore(state => state.adjustStock);
   const pushFeedback = useSalesStore(state => state.pushFeedback);
 
-  const lowStock = products.filter(product => product.stock <= 5);
-  const healthyStock = products.filter(product => product.stock > 12).length;
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = useMemo(
+    () => Array.from(new Set(products.map(p => p.category).filter(Boolean))),
+    [products]
+  );
+
+  const filteredProducts = useMemo(
+    () =>
+      products.filter(product =>
+        selectedCategory ? product.category === selectedCategory : true
+      ),
+    [products, selectedCategory]
+  );
+
+  const lowStock = filteredProducts.filter(product => product.stock <= 5);
+  const healthyStock = filteredProducts.filter(product => product.stock > 12).length;
 
   const handleAdjust = (productId: string, delta: number) => {
     const product = products.find(item => item.id === productId);
@@ -57,9 +73,16 @@ export function InventoryScreen() {
           />
           <MetricCard
             label="Tracked SKUs"
-            value={String(products.length)}
+            value={String(filteredProducts.length)}
           />
         </View>
+        {categories.length > 0 && (
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelect={setSelectedCategory}
+          />
+        )}
       </Card>
 
       {lowStock.length ? (
@@ -90,7 +113,7 @@ export function InventoryScreen() {
         </Card>
       )}
 
-      {products.map(product => (
+      {filteredProducts.map(product => (
         <Card key={product.id}>
           <View style={styles.inventoryHeader}>
             <View>

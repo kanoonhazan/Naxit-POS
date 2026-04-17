@@ -4,6 +4,7 @@ import {StyleSheet, Text} from 'react-native';
 import {
   Button,
   Card,
+  CategoryFilter,
   Screen,
   SectionTitle,
   TextField,
@@ -24,18 +25,26 @@ export function ProductListScreen() {
   const pushFeedback = useSalesStore(state => state.pushFeedback);
 
   const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [formVisible, setFormVisible] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
 
+  const categories = useMemo(
+    () => Array.from(new Set(products.map(p => p.category).filter(Boolean))),
+    [products]
+  );
+
   const filteredProducts = useMemo(
     () =>
-      products.filter(product =>
-        `${product.name} ${product.category} ${product.code}`
+      products.filter(product => {
+        const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
+        const matchesQuery = `${product.name} ${product.category} ${product.code}`
           .toLowerCase()
-          .includes(query.toLowerCase()),
-      ),
-    [products, query],
+          .includes(query.toLowerCase());
+        return matchesCategory && matchesQuery;
+      }),
+    [products, query, selectedCategory],
   );
 
   const openCreate = () => {
@@ -109,6 +118,13 @@ export function ProductListScreen() {
           onChangeText={setQuery}
           placeholder="Search by name, category, or code"
         />
+        {categories.length > 0 && (
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelect={setSelectedCategory}
+          />
+        )}
       </Card>
 
       {filteredProducts.length === 0 ? (

@@ -218,6 +218,56 @@ export function Tag({
   );
 }
 
+export function CategoryFilter({
+  categories,
+  selectedCategory,
+  onSelect,
+}: {
+  categories: string[];
+  selectedCategory: string | null;
+  onSelect: (category: string | null) => void;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.categoryScrollContent}
+      style={styles.categoryScroll}>
+      <Pressable
+        onPress={() => onSelect(null)}
+        style={[
+          styles.categoryPill,
+          selectedCategory === null ? styles.categoryPillActive : null,
+        ]}>
+        <Text
+          style={[
+            styles.categoryPillText,
+            selectedCategory === null ? styles.categoryPillTextActive : null,
+          ]}>
+          All
+        </Text>
+      </Pressable>
+      {categories.map(cat => (
+        <Pressable
+          key={cat}
+          onPress={() => onSelect(cat)}
+          style={[
+            styles.categoryPill,
+            selectedCategory === cat ? styles.categoryPillActive : null,
+          ]}>
+          <Text
+            style={[
+              styles.categoryPillText,
+              selectedCategory === cat ? styles.categoryPillTextActive : null,
+            ]}>
+            {cat}
+          </Text>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+}
+
 export function TextField({
   label,
   value,
@@ -579,6 +629,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.ink,
     fontWeight: '600',
+  },
+  categoryScroll: {
+    marginHorizontal: -theme.spacing.lg,
+  },
+  categoryScrollContent: {
+    paddingHorizontal: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  categoryPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.panel,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  categoryPillActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  categoryPillText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.ink,
+  },
+  categoryPillTextActive: {
+    color: theme.colors.panel,
   },
   fieldWrap: {
     gap: 8,
