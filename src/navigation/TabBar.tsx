@@ -24,55 +24,37 @@ export function TabBar({
   const rightTabs = sideTabs.slice(2);
 
   return (
-    <View style={[styles.safeWrap, {paddingBottom: Math.max(bottomInset, 10)}]}>
-      <View style={styles.outer}>
-        <View style={styles.surface}>
-          <View style={styles.sideRow}>
-            {leftTabs.map(tab => (
-              <SideTab
-                key={tab.key}
-                active={activeTab === tab.key}
-                label={tab.label}
-                tabKey={tab.key}
-                onPress={() => onChange(tab.key)}
-              />
-            ))}
-          </View>
-
-          <View style={styles.centerGap}>
-            <Text style={[styles.centerLabel, activeTab === 'sales' ? styles.centerLabelActive : null]}>
-              Sales
-            </Text>
-          </View>
-
-          <View style={styles.sideRow}>
-            {rightTabs.map(tab => (
-              <SideTab
-                key={tab.key}
-                active={activeTab === tab.key}
-                label={tab.label}
-                tabKey={tab.key}
-                onPress={() => onChange(tab.key)}
-              />
-            ))}
-          </View>
-        </View>
+    <View style={[styles.safeWrap, {paddingBottom: Math.max(bottomInset, 16)}]}>
+      <View style={styles.surface}>
+        {leftTabs.map(tab => (
+          <SideTab
+            key={tab.key}
+            active={activeTab === tab.key}
+            label={tab.label}
+            tabKey={tab.key}
+            onPress={() => onChange(tab.key)}
+          />
+        ))}
 
         <Pressable
           onPress={() => onChange('sales')}
           style={({pressed}) => [
-            styles.centerActionWrap,
-            pressed ? styles.centerPressed : null,
+            styles.centerTab,
+            pressed ? styles.centerTabPressed : null,
+            activeTab === 'sales' ? styles.centerTabActive : null,
           ]}>
-          <View style={styles.centerHalo} />
-          <View
-            style={[
-              styles.centerAction,
-              activeTab === 'sales' ? styles.centerActionActive : null,
-            ]}>
-            <SalesGlyph />
-          </View>
+          <SalesGlyph />
         </Pressable>
+
+        {rightTabs.map(tab => (
+          <SideTab
+            key={tab.key}
+            active={activeTab === tab.key}
+            label={tab.label}
+            tabKey={tab.key}
+            onPress={() => onChange(tab.key)}
+          />
+        ))}
       </View>
     </View>
   );
@@ -146,110 +128,74 @@ function TabGlyph({
 }
 
 function SalesGlyph() {
+  const ink = theme.colors.panel;
   return (
     <View style={styles.salesGlyph}>
-      <View style={styles.salesScanCorners} />
-      <View style={styles.salesCenterDot} />
+      <View style={[styles.salesScanCorners, {borderColor: ink}]} />
+      <View style={[styles.salesCenterDot, {backgroundColor: ink}]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeWrap: {
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: 8,
-  },
-  outer: {
-    position: 'relative',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    paddingHorizontal: theme.spacing.lg,
   },
   surface: {
-    minHeight: 92,
+    height: 72,
     backgroundColor: theme.colors.panel,
-    borderRadius: 30,
+    borderRadius: 36,
     borderWidth: 1,
     borderColor: '#DCE4ED',
-    paddingHorizontal: 10,
-    paddingTop: 22,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    ...theme.shadow,
-  },
-  sideRow: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    alignItems: 'flex-end',
-  },
-  centerGap: {
-    width: 92,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  centerLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#96A4B5',
-  },
-  centerLabelActive: {
-    color: theme.colors.primary,
-  },
-  centerActionWrap: {
-    position: 'absolute',
-    alignSelf: 'center',
-    top: -34,
-    left: '50%',
-    marginLeft: -40,
-    width: 80,
-    height: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  centerPressed: {
-    opacity: 0.92,
-  },
-  centerHalo: {
-    position: 'absolute',
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: 'rgba(23, 58, 99, 0.12)',
-  },
-  centerAction: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: '#386FC7',
-    borderWidth: 6,
-    borderColor: '#F7FAFD',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#173A63',
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    shadowColor: '#0B1522',
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
     elevation: 8,
   },
-  centerActionActive: {
-    transform: [{scale: 1.02}],
+  centerTab: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  centerTabPressed: {
+    opacity: 0.9,
+    transform: [{scale: 0.96}],
+  },
+  centerTabActive: {
+    borderWidth: 2,
+    borderColor: '#DCE4ED',
   },
   sideTab: {
-    width: 68,
+    width: 60,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    gap: 4,
   },
   sidePressed: {
-    opacity: 0.8,
+    opacity: 0.75,
   },
   iconFrame: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -265,11 +211,11 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   gridIcon: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 3,
+    gap: 2,
   },
   gridCell: {
     width: 8,
@@ -277,20 +223,20 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   cardIcon: {
-    width: 22,
-    height: 16,
+    width: 20,
+    height: 14,
     borderWidth: 2,
     borderRadius: 4,
     justifyContent: 'center',
     overflow: 'hidden',
   },
   cardStripe: {
-    height: 4,
+    height: 3,
     width: '100%',
   },
   reportIcon: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 3,
@@ -302,45 +248,45 @@ const styles = StyleSheet.create({
   },
   reportBarMid: {
     width: 4,
-    height: 13,
+    height: 12,
     borderRadius: 2,
   },
   reportBarTall: {
     width: 4,
-    height: 18,
+    height: 16,
     borderRadius: 2,
   },
   gearRing: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   gearCore: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   salesGlyph: {
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   salesScanCorners: {
     position: 'absolute',
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     borderWidth: 2.5,
-    borderColor: '#FFFFFF',
+    borderColor: theme.colors.panel,
   },
   salesCenterDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.panel,
   },
 });

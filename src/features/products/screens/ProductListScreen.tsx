@@ -1,5 +1,5 @@
 import React, {useMemo, useState} from 'react';
-import {StyleSheet, Text} from 'react-native';
+import {FlatList, StyleSheet, Text} from 'react-native';
 
 import {
   Button,
@@ -102,49 +102,60 @@ export function ProductListScreen() {
     }
   };
 
+  const listHeader = (
+    <Card style={styles.headerSpacer}>
+      <SectionTitle
+        title="Product manager"
+        detail="Search once, edit fast, generate a QR label right away."
+      />
+      <TextField
+        label="Search products"
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Search by name, category, or code"
+      />
+      {categories.length > 0 && (
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
+      )}
+    </Card>
+  );
+
+  const listEmpty = (
+    <Card>
+      <Text style={styles.emptyTitle}>No products found</Text>
+      <Text style={styles.emptyDetail}>
+        Keep names short and obvious so the staff never has to think at the
+        counter.
+      </Text>
+      <Button label="Create first product" onPress={openCreate} />
+    </Card>
+  );
+
   return (
     <Screen
+      scrollEnabled={false}
+      bottomPadding={0}
       headerAction={<Button label="Add item" onPress={openCreate} compact />}>
-      <Card>
-        <SectionTitle
-          title="Product manager"
-          detail="Search once, edit fast, generate a QR label right away."
-        />
-        <TextField
-          label="Search products"
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search by name, category, or code"
-        />
-        {categories.length > 0 && (
-          <CategoryFilter
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
-        )}
-      </Card>
-
-      {filteredProducts.length === 0 ? (
-        <Card>
-          <Text style={styles.emptyTitle}>No products found</Text>
-          <Text style={styles.emptyDetail}>
-            Keep names short and obvious so the staff never has to think at the
-            counter.
-          </Text>
-          <Button label="Create first product" onPress={openCreate} />
-        </Card>
-      ) : (
-        filteredProducts.map(product => (
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={item => item.id}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        renderItem={({item: product}) => (
           <ProductCard
-            key={product.id}
             product={product}
             onEdit={openEdit}
             onDelete={handleDelete}
             onShowQr={setQrProduct}
           />
-        ))
-      )}
+        )}
+      />
 
       <ProductFormSheet
         visible={formVisible}
@@ -168,5 +179,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: theme.colors.muted,
+  },
+  headerSpacer: {
+    marginBottom: theme.spacing.lg,
+  },
+  listContent: {
+    paddingTop: theme.spacing.md,
+    paddingBottom: 110,
+    gap: theme.spacing.lg,
   },
 });

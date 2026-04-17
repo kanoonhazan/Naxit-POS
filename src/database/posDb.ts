@@ -3,7 +3,10 @@ import {createMMKV} from 'react-native-mmkv';
 import {seedProducts, seedReceipts, seedSettings} from '../seed';
 import type {Product, Receipt, StoreSettings} from '../types';
 
-const storage = createMMKV();
+const storage = createMMKV({
+  id: 'pos_secure_db',
+  encryptionKey: 'naxit_pos_secure_base_key_1',
+});
 
 type Snapshot = {
   products: Product[];
@@ -17,18 +20,33 @@ const SETTINGS_KEY = 'pos_settings';
 const SEED_KEY = 'pos_seeded';
 
 function getProducts(): Product[] {
-  const data = storage.getString(PRODUCTS_KEY);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = storage.getString(PRODUCTS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.warn('[DATABASE] Failed to parse products:', error);
+    return [];
+  }
 }
 
 function getReceipts(): Receipt[] {
-  const data = storage.getString(RECEIPTS_KEY);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = storage.getString(RECEIPTS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.warn('[DATABASE] Failed to parse receipts:', error);
+    return [];
+  }
 }
 
 function getSettings(): StoreSettings | null {
-  const data = storage.getString(SETTINGS_KEY);
-  return data ? JSON.parse(data) : null;
+  try {
+    const data = storage.getString(SETTINGS_KEY);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.warn('[DATABASE] Failed to parse settings:', error);
+    return null;
+  }
 }
 
 export async function initializeDatabase() {

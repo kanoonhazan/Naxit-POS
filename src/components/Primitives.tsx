@@ -27,6 +27,7 @@ type ScreenProps = {
   children: React.ReactNode;
   headerAction?: React.ReactNode;
   bottomPadding?: number;
+  scrollEnabled?: boolean;
 };
 
 type InputProps = {
@@ -65,19 +66,35 @@ export function Screen({
   children,
   headerAction,
   bottomPadding = 110,
+  scrollEnabled = true,
 }: ScreenProps) {
+  const content = (
+    <>
+      {headerAction ? (
+        <View style={[styles.headerRow, {justifyContent: 'flex-end'}]}>
+          {headerAction}
+        </View>
+      ) : null}
+      {children}
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, {paddingBottom: bottomPadding}]}
-        showsVerticalScrollIndicator={false}>
-        {headerAction ? (
-          <View style={[styles.headerRow, { justifyContent: 'flex-end' }]}>
-            {headerAction}
-          </View>
-        ) : null}
-        {children}
-      </ScrollView>
+      {scrollEnabled ? (
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            {paddingBottom: bottomPadding},
+          ]}
+          showsVerticalScrollIndicator={false}>
+          {content}
+        </ScrollView>
+      ) : (
+        <View style={[styles.scrollContent, {flex: 1, paddingBottom: bottomPadding}]}>
+          {content}
+        </View>
+      )}
     </SafeAreaView>
   );
 }

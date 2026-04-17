@@ -1,5 +1,5 @@
 import React, {useMemo, useState} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {FlatList, Pressable, StyleSheet, Text, View} from 'react-native';
 
 import {
   Button,
@@ -255,44 +255,76 @@ export function SalesScreen() {
 
   const printerConnected = settings?.printerConnected ?? false;
 
+  const listHeader = (
+    <View style={styles.headerGap}>
+      <View style={styles.actionBar}>
+        <View style={styles.searchWrap}>
+          <TextField
+            label="Quick find"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search by name or code"
+          />
+        </View>
+        <Button label="Scan QR" onPress={() => setScannerVisible(true)} />
+      </View>
+
+      {categories.length > 0 && (
+        <CategoryFilter
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelect={setSelectedCategory}
+        />
+      )}
+    </View>
+  );
+
+  const listFooter = (
+    <Card style={styles.cartCard}>
+      <SectionTitle
+        title="Live cart"
+        detail={
+          cartProducts.length
+            ? 'Every item stays editable without leaving the page.'
+            : 'Empty by design. Scan once and checkout stays ready below.'
+        }
+      />
+      <CartPanel
+        items={cartProducts}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onScanFirst={handleDemoScan}
+      />
+    </Card>
+  );
+
   return (
     <View style={styles.root}>
       <FeedbackToast feedback={feedback} />
 
       <Screen
-        bottomPadding={180}
+        scrollEnabled={false}
+        bottomPadding={0}
         headerAction={
           <Tag
             label={printerConnected ? 'Printer ready' : 'Printer offline'}
             tone={printerConnected ? 'success' : 'warning'}
           />
         }>
-        <View style={styles.actionBar}>
-          <View style={styles.searchWrap}>
-            <TextField
-              label="Quick find"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search by name or code"
-            />
-          </View>
-          <Button label="Scan QR" onPress={() => setScannerVisible(true)} />
-        </View>
-
-        {categories.length > 0 && (
-          <CategoryFilter
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
-        )}
-
-        <View style={styles.productGrid}>
-          {filteredProducts.map(product => {
+        
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={item => item.id}
+          ListHeaderComponent={listHeader}
+          ListFooterComponent={listFooter}
+          numColumns={2}
+          columnWrapperStyle={styles.rowGap}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          renderItem={({item: product}) => {
             const isOutOfStock = product.stock <= 0;
             return (
               <Pressable
-                key={product.id}
                 onPress={() => !isOutOfStock && handleAddToCart(product.id)}
                 style={({pressed}) => [
                   styles.productTile,
@@ -319,25 +351,8 @@ export function SalesScreen() {
                 </View>
               </Pressable>
             );
-          })}
-        </View>
-
-        <Card>
-          <SectionTitle
-            title="Live cart"
-            detail={
-              cartProducts.length
-                ? 'Every item stays editable without leaving the page.'
-                : 'Empty by design. Scan once and checkout stays ready below.'
-            }
-          />
-          <CartPanel
-            items={cartProducts}
-            onUpdateQuantity={handleUpdateQuantity}
-            onRemoveItem={handleRemoveItem}
-            onScanFirst={handleDemoScan}
-          />
-        </Card>
+          }}
+        />
       </Screen>
 
       <CheckoutDock
@@ -384,7 +399,8 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   productTile: {
-    width: '48%',
+    flex: 1,
+    maxWidth: '48.5%',
     backgroundColor: theme.colors.panel,
     borderWidth: 1,
     borderRadius: theme.radius.md,
@@ -427,5 +443,19 @@ const styles = StyleSheet.create({
   productTileStock: {
     fontSize: 12,
     color: theme.colors.muted,
+  },
+  headerGap: {
+    gap: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  rowGap: {
+    justifyContent: 'space-between',
+  },
+  listContent: {
+    paddingBottom: 180,
+    gap: theme.spacing.lg,
+  },
+  cartCard: {
+    marginTop: theme.spacing.sm,
   },
 });

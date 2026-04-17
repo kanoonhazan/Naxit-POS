@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   Card,
@@ -61,8 +61,8 @@ export function InventoryScreen() {
     }
   };
 
-  return (
-    <Screen>
+  const listHeader = (
+    <View style={styles.headerGap}>
       <Card>
         <SectionTitle
           title="Stock health"
@@ -136,37 +136,48 @@ export function InventoryScreen() {
           </View>
         )}
       </View>
+    </View>
+  );
 
-      {filteredProducts.map(product => (
-        <Card key={product.id}>
-          <View style={styles.inventoryHeader}>
-            <View>
-              <Text style={styles.inventoryName}>{product.name}</Text>
-              <Text style={styles.inventoryMeta}>
-                {product.category}  |  {formatMoney(product.price)}
-              </Text>
-            </View>
-            <StockPill stock={product.stock} />
-          </View>
-
-          <View style={styles.adjustRow}>
-            {[-1, 1, 5].map(delta => (
-              <Pressable
-                key={`${product.id}-${delta}`}
-                onPress={() => handleAdjust(product.id, delta)}
-                style={({ pressed }) => [
-                  styles.adjustButton,
-                  delta < 0 ? styles.adjustButtonDanger : null,
-                  pressed ? styles.adjustPressed : null,
-                ]}>
-                <Text style={styles.adjustLabel}>
-                  {delta > 0 ? `+${delta}` : String(delta)}
+  return (
+    <Screen scrollEnabled={false} bottomPadding={0}>
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={item => item.id}
+        ListHeaderComponent={listHeader}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        renderItem={({item: product}) => (
+          <Card>
+            <View style={styles.inventoryHeader}>
+              <View>
+                <Text style={styles.inventoryName}>{product.name}</Text>
+                <Text style={styles.inventoryMeta}>
+                  {product.category}  |  {formatMoney(product.price)}
                 </Text>
-              </Pressable>
-            ))}
-          </View>
-        </Card>
-      ))}
+              </View>
+              <StockPill stock={product.stock} />
+            </View>
+
+            <View style={styles.adjustRow}>
+              {[-1, 1, 5].map(delta => (
+                <Pressable
+                  key={`${product.id}-${delta}`}
+                  onPress={() => handleAdjust(product.id, delta)}
+                  style={({ pressed }) => [
+                    styles.adjustButton,
+                    delta < 0 ? styles.adjustButtonDanger : null,
+                    pressed ? styles.adjustPressed : null,
+                  ]}>
+                  <Text style={styles.adjustLabel}>
+                    {delta > 0 ? `+${delta}` : String(delta)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </Card>
+        )}
+      />
     </Screen>
   );
 }
@@ -257,5 +268,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: theme.colors.ink,
+  },
+  headerGap: {
+    gap: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+  },
+  listContent: {
+    paddingBottom: 110,
+    gap: theme.spacing.lg,
   },
 });

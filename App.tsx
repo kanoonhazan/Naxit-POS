@@ -12,6 +12,7 @@ import {SafeAreaProvider, useSafeAreaInsets} from 'react-native-safe-area-contex
 import {TabBar} from './src/navigation/TabBar';
 import {useAppInit} from './src/hooks/useAppInit';
 import {useSettingsStore} from './src/stores/useSettingsStore';
+import {ErrorBoundary} from './src/components/ErrorBoundary';
 import {theme} from './src/theme';
 import type {TabKey} from './src/types';
 
@@ -25,7 +26,9 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </SafeAreaProvider>
   );
 }
