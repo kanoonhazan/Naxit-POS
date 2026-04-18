@@ -77,6 +77,22 @@ export function ReceiptModal({
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           <View style={styles.summaryRow}>
+            <Text style={[styles.summaryLabel, { color: colors.ink }]}>Subtotal</Text>
+            <Text style={[styles.summaryValue, { color: colors.ink }]}>
+              {formatMoney(receipt.subtotal)}
+            </Text>
+          </View>
+          {receipt.discount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={[styles.summaryLabel, { color: colors.ink }]}>
+                Discount ({receipt.discountType === 'percentage' ? `${receipt.discount}%` : 'FIXED'})
+              </Text>
+              <Text style={[styles.summaryValue, { color: colors.danger }]}>
+                -{formatMoney(receipt.discountType === 'percentage' ? Math.round((receipt.subtotal * receipt.discount) / 100) : receipt.discount)}
+              </Text>
+            </View>
+          )}
+          <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.ink }]}>Paid by</Text>
             <Text style={[styles.summaryValue, { color: colors.ink }]}>
               {receipt.paymentMethod.toUpperCase()}

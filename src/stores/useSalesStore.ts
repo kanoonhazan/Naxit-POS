@@ -22,6 +22,8 @@ type SalesStore = {
     paymentMethod: PaymentMethod;
     customerName?: string;
     customerPhone?: string;
+    discount?: number;
+    discountType?: 'percentage' | 'fixed';
     receiptCount: number;
   }) => Promise<Receipt>;
 
@@ -46,25 +48,30 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
     });
   },
 
-  checkout: async ({items, subtotal, paymentMethod, customerName, customerPhone, receiptCount}) => {
+  checkout: async ({items, subtotal, paymentMethod, customerName, customerPhone, discount, discountType, receiptCount}) => {
     // Safety check: Don't checkout empty carts
     if (!items || items.length === 0) {
       throw new Error('Checkout failed: Cart is empty');
     }
 
-    const tax = 0;
-    const total = subtotal + tax;
+    const discountVal = discount || 0;
+    const dType = discountType || 'percentage';
+    
+    // Calculate actual discount amount
+    const discountAmount = dType === 'percentage' 
+      ? Math.round((subtotal * discountVal) / 100) 
+      : discountVal;
 
-    // Safety check: Prevent negative or impossible totals
-    if (total < 0) {
-      throw new Error('Checkout failed: Total cannot be negative');
-    }
+    const tax = 0;
+    const total = Math.max(0, subtotal - discountAmount + tax);
 
     const nextReceipt: Receipt = {
       id: `receipt-${Date.now()}`,
       number: `#${String(receiptCount + 1).padStart(4, '0')}`,
       items,
       subtotal,
+      discount: discountVal,
+      discountType: dType,
       tax,
       total,
       paidAmount: total,

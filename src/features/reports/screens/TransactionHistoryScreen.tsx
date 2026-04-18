@@ -236,6 +236,20 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
                     </View>
                   ))}
                   <View style={[styles.txDivider, { backgroundColor: colors.border }]} />
+                  <View style={styles.txSummaryRow}>
+                    <Text style={[styles.txSummaryLabel, { color: colors.muted }]}>Subtotal</Text>
+                    <Text style={[styles.txSummaryValue, { color: colors.ink }]}>{formatMoney(item.subtotal, currency)}</Text>
+                  </View>
+                  {item.discount > 0 && (
+                    <View style={styles.txSummaryRow}>
+                      <Text style={[styles.txSummaryLabel, { color: colors.muted }]}>
+                        Discount ({item.discountType === 'percentage' ? `${item.discount}%` : 'FIXED'})
+                      </Text>
+                      <Text style={[styles.txSummaryValue, { color: colors.danger }]}>
+                        -{formatMoney(item.discountType === 'percentage' ? Math.round((item.subtotal * item.discount) / 100) : item.discount, currency)}
+                      </Text>
+                    </View>
+                  )}
                   {item.tax > 0 && (
                     <View style={styles.txSummaryRow}>
                       <Text style={[styles.txSummaryLabel, { color: colors.muted }]}>Tax</Text>

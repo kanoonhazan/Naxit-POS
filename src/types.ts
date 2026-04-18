@@ -19,6 +19,8 @@ export type CartItem = {
 
 export type PaymentMethod = 'cash' | 'card' | 'split';
 
+export type DiscountType = 'percentage' | 'fixed';
+
 export type Receipt = {
   id: string;
   number: string;
@@ -29,6 +31,8 @@ export type Receipt = {
     quantity: number;
   }>;
   subtotal: number;
+  discount: number;
+  discountType: DiscountType;
   tax: number;
   total: number;
   paidAmount: number;

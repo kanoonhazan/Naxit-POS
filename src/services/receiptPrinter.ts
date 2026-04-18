@@ -83,6 +83,13 @@ export function formatReceiptText(
   // Totals
   lines.push(padLine('Subtotal:', formatAmount(receipt.subtotal)));
 
+  if (receipt.discount > 0) {
+    const dAmt = receipt.discountType === 'percentage'
+      ? Math.round((receipt.subtotal * receipt.discount) / 100)
+      : receipt.discount;
+    lines.push(padLine(`Discount (${receipt.discountType === 'percentage' ? `${receipt.discount}%` : 'FIXED'}):`, `-${formatAmount(dAmt)}`));
+  }
+
   if (receipt.tax > 0) {
     lines.push(padLine('Tax:', formatAmount(receipt.tax)));
   }

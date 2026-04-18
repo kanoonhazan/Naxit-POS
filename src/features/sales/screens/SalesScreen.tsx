@@ -57,6 +57,8 @@ export function SalesScreen() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [discountValue, setDiscountValue] = useState('');
+  const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [isBrowsing, setIsBrowsing] = useState(false);
 
   const categories = useMemo(
@@ -100,6 +102,13 @@ export function SalesScreen() {
     0,
   );
   const lastItem = cartProducts[cartProducts.length - 1];
+
+  const discountNum = parseFloat(discountValue) || 0;
+  const discountAmount = discountType === 'percentage' 
+    ? Math.round((subtotal * discountNum) / 100) 
+    : discountNum;
+  
+  const discountedTotal = Math.max(0, subtotal - discountAmount);
 
   const handleAddToCart = React.useCallback((
     productId: string,
@@ -230,6 +239,8 @@ export function SalesScreen() {
       paymentMethod,
       customerName: customerName.trim() || undefined,
       customerPhone: customerPhone.trim() || undefined,
+      discount: discountNum,
+      discountType,
       receiptCount: receipts.length,
     });
 
@@ -237,6 +248,8 @@ export function SalesScreen() {
     setCheckoutStage('cart');
     setCustomerName('');
     setCustomerPhone('');
+    setDiscountValue('');
+    setDiscountType('percentage');
     setPaymentMethod('cash');
 
     // Auto-print if enabled
@@ -320,8 +333,15 @@ export function SalesScreen() {
           ) : (
             <View style={[styles.billingHeader, { backgroundColor: colors.primary + '10', borderRadius: radius.lg, borderColor: colors.primary + '30' }]}>
               <View style={styles.billingHeaderInfo}>
-                <Text style={[styles.billingHeaderLabel, { color: colors.muted }]}>Total amount</Text>
-                <Text style={[styles.billingHeaderTotal, { color: colors.primary }]}>{formatMoney(subtotal)}</Text>
+                {discountAmount > 0 && (
+                  <Text style={[styles.billingHeaderSubtotal, { color: colors.muted }]}>
+                    Subtotal: {formatMoney(subtotal)}
+                  </Text>
+                )}
+                <Text style={[styles.billingHeaderLabel, { color: colors.muted }]}>
+                  {discountAmount > 0 ? 'Payable Total' : 'Total amount'}
+                </Text>
+                <Text style={[styles.billingHeaderTotal, { color: colors.primary }]}>{formatMoney(discountedTotal)}</Text>
               </View>
               <View style={[styles.billingHeaderTag, { backgroundColor: colors.primary, borderRadius: radius.pill }]}>
                 <Text style={[styles.billingHeaderTagText, { color: colors.panel }]}>{totalItems} {totalItems === 1 ? 'Item' : 'Items'}</Text>
@@ -415,6 +435,45 @@ export function SalesScreen() {
                 </View>
 
                 <View style={styles.paymentGroup}>
+                  <Text style={[styles.paymentLabel, { color: colors.ink }]}>Discount</Text>
+                  <View style={styles.discountRow}>
+                    <View style={{ flex: 1.5 }}>
+                      <TextField
+                        label=""
+                        value={discountValue}
+                        onChangeText={setDiscountValue}
+                        placeholder={discountType === 'percentage' ? 'e.g. 10' : 'e.g. 50'}
+                        keyboardType="numeric"
+                      />
+                    </View>
+                    <View style={[styles.typeSelector, { backgroundColor: colors.background, borderRadius: radius.md }]}>
+                      {(['percentage', 'fixed'] as const).map(type => {
+                        const active = discountType === type;
+                        return (
+                          <Pressable
+                            key={type}
+                            onPress={() => setDiscountType(type)}
+                            style={[
+                              styles.typeOption,
+                              { borderRadius: radius.sm },
+                              active ? [styles.typeOptionActive, { backgroundColor: colors.panel }] : null,
+                            ]}>
+                            <Text
+                              style={[
+                                styles.typeOptionText,
+                                { color: colors.muted },
+                                active ? { color: colors.ink } : null,
+                              ]}>
+                              {type === 'percentage' ? '%' : 'LKR'}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.paymentGroup}>
                   <Text style={[styles.paymentLabel, { color: colors.ink }]}>Payment method</Text>
                   <View style={[styles.paymentSelector, { backgroundColor: colors.background, borderRadius: radius.md }]}>
                     {paymentMethods.map(method => {
@@ -452,7 +511,7 @@ export function SalesScreen() {
                   </View>
                   <View style={{ flex: 2 }}>
                     <Button 
-                      label={`Pay ${formatMoney(subtotal)}`} 
+                      label={`Pay ${formatMoney(discountedTotal)}`} 
                       onPress={handleCheckout} 
                     />
                   </View>
@@ -631,7 +690,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   billingHeaderInfo: {
-    gap: 4,
+    gap: 2,
+  },
+  billingHeaderSubtotal: {
+    fontSize: 14,
+    fontWeight: '700',
+    textDecorationLine: 'line-through',
+    marginBottom: 2,
   },
   billingHeaderLabel: {
     fontSize: 13,
@@ -650,6 +715,34 @@ const styles = StyleSheet.create({
   },
   billingHeaderTagText: {
     fontSize: 14,
+    fontWeight: '800',
+  },
+  discountRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  typeSelector: {
+    flex: 1,
+    flexDirection: 'row',
+    padding: 4,
+    gap: 4,
+    height: 48,
+  },
+  typeOption: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  typeOptionActive: {
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 2,
+  },
+  typeOptionText: {
+    fontSize: 12,
     fontWeight: '800',
   },
 });
