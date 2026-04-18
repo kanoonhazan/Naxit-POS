@@ -57,6 +57,7 @@ export function SalesScreen() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [isBrowsing, setIsBrowsing] = useState(false);
 
   const categories = useMemo(
     () => Array.from(new Set(products.map(p => p.category).filter(Boolean))),
@@ -149,18 +150,8 @@ export function SalesScreen() {
     handleAddToCart(product.id, 'scan');
   };
 
-  const handleDemoScan = () => {
-    if (products.length === 0) {
-      pushFeedback(
-        'warning',
-        'No products yet',
-        'Add a product before scanning.',
-      );
-      return;
-    }
-
-    const nextProduct = products[Math.floor(Math.random() * products.length)];
-    handleAddToCart(nextProduct.id, 'scan');
+  const handleOpenCatalog = () => {
+    setIsBrowsing(true);
   };
 
   const handleUpdateQuantity = (productId: string, delta: number) => {
@@ -265,12 +256,13 @@ export function SalesScreen() {
 
   const printerConnected = settings?.printerConnected ?? false;
 
-  const isSearching = searchQuery.length > 0 || selectedCategory !== null;
+  const isSearching = searchQuery.length > 0 || selectedCategory !== null || isBrowsing;
 
 
   const dismissSearch = () => {
     setSearchQuery('');
     setSelectedCategory(null);
+    setIsBrowsing(false);
   };
 
   const paymentMethods: PaymentMethod[] = ['cash', 'card', 'split'];
@@ -386,7 +378,7 @@ export function SalesScreen() {
                     items={cartProducts}
                     onUpdateQuantity={handleUpdateQuantity}
                     onRemoveItem={handleRemoveItem}
-                    onScanFirst={handleDemoScan}
+                    onScanFirst={handleOpenCatalog}
                   />
                 </ScrollView>
               </>

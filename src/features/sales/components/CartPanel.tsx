@@ -32,7 +32,7 @@ export function CartPanel({
         <Text style={[styles.emptyCartBody, { color: colors.muted }]}>
           The first scan should be the only decision the cashier makes.
         </Text>
-        <Button label="Scan first item" onPress={onScanFirst} />
+        <Button label="Browse Catalog" onPress={onScanFirst} />
       </View>
     );
   }

@@ -1,5 +1,5 @@
-import {useColorScheme} from 'react-native';
-import {useSettingsStore} from './stores/useSettingsStore';
+import { useColorScheme } from 'react-native';
+import { useSettingsStore } from './stores/useSettingsStore';
 
 const lightColors = {
   background: '#EEF2F6',
@@ -22,14 +22,14 @@ const lightColors = {
 };
 
 const darkColors = {
-  background: '#0B1522',
-  panel: '#152132',
-  panelMuted: '#1E2D3E',
-  border: '#2C3E50',
-  ink: '#F1F5F9',
-  muted: '#94A3B8',
-  primary: '#5D89BA', // Lighter blue for dark background
-  primarySoft: '#1A2A3A',
+  background: '#080C12',
+  panel: '#101217',
+  panelMuted: '#161920',
+  border: '#2A2A2A',
+  ink: '#F8F9FA',
+  muted: '#808080',
+  primary: '#3B82F6', // More vibrant neutral blue
+  primarySoft: '#181818',
   success: '#22C55E',
   successSoft: '#064E3B',
   warning: '#F59E0B',
@@ -78,12 +78,12 @@ export const theme = {
 export function useAppTheme() {
   const systemScheme = useColorScheme();
   const settings = useSettingsStore(state => state.settings);
-  
+
   const themeMode = settings?.themeMode ?? 'system';
   const isDark = themeMode === 'system' ? systemScheme === 'dark' : themeMode === 'dark';
-  
+
   const colors = isDark ? darkColors : lightColors;
-  
+
   return {
     colors,
     spacing,
