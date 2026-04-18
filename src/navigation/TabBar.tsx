@@ -1,8 +1,10 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions, Animated } from 'react-native';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 
 import { useAppTheme } from '../theme';
 import type { TabKey } from '../types';
+import { TabBg } from './TabBg';
 
 const sideTabs: Array<{ key: Exclude<TabKey, 'sales'>; label: string }> = [
   { key: 'inventory', label: 'Inventory' },
@@ -21,53 +23,55 @@ export function TabBar({
   bottomInset: number;
 }) {
   const { colors, shadow } = useAppTheme();
+  const { width } = useWindowDimensions();
+  
   const leftTabs = sideTabs.slice(0, 2);
   const rightTabs = sideTabs.slice(2);
 
   return (
-    <View style={[styles.safeWrap, { paddingBottom: Math.max(bottomInset, 16), paddingHorizontal: 18 }]}>
-      <View style={[
-        styles.surface, 
-        { 
-          backgroundColor: colors.panel, 
-          borderColor: colors.border,
-          ...shadow 
-        }
-      ]}>
-        {leftTabs.map(tab => (
-          <SideTab
-            key={tab.key}
-            active={activeTab === tab.key}
-            label={tab.label}
-            tabKey={tab.key}
-            onPress={() => onChange(tab.key)}
-          />
-        ))}
+    <View style={[styles.safeWrap, { paddingBottom: Math.max(bottomInset, 4) }]}>
+      <TabBg color={colors.panel} width={width} />
+      
+      <View style={styles.content}>
+        <View style={styles.sideSection}>
+          {leftTabs.map(tab => (
+            <SideTab
+              key={tab.key}
+              active={activeTab === tab.key}
+              label={tab.label}
+              tabKey={tab.key}
+              onPress={() => onChange(tab.key)}
+            />
+          ))}
+        </View>
 
-        <Pressable
-          onPress={() => onChange('sales')}
-          style={({ pressed }) => [
-            styles.centerTab,
-            {
-              backgroundColor: colors.primary,
-              shadowColor: colors.primary,
-              borderColor: colors.border,
-            },
-            pressed ? styles.centerTabPressed : null,
-            activeTab === 'sales' ? [styles.centerTabActive, { borderColor: colors.border }] : null,
-          ]}>
-          <SalesGlyph />
-        </Pressable>
+        <View style={styles.centerSection}>
+          <Pressable
+            onPress={() => onChange('sales')}
+            style={({ pressed }) => [
+              styles.centerTab,
+              {
+                backgroundColor: colors.primary,
+                shadowColor: colors.primary,
+              },
+              pressed ? styles.centerTabPressed : null,
+            ]}>
+            <View style={styles.glow} />
+            <SalesGlyph color={colors.panel} />
+          </Pressable>
+        </View>
 
-        {rightTabs.map(tab => (
-          <SideTab
-            key={tab.key}
-            active={activeTab === tab.key}
-            label={tab.label}
-            tabKey={tab.key}
-            onPress={() => onChange(tab.key)}
-          />
-        ))}
+        <View style={styles.sideSection}>
+          {rightTabs.map(tab => (
+            <SideTab
+              key={tab.key}
+              active={activeTab === tab.key}
+              label={tab.label}
+              tabKey={tab.key}
+              onPress={() => onChange(tab.key)}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -85,14 +89,38 @@ export function SideTab({
   onPress: () => void;
 }) {
   const { colors } = useAppTheme();
+  const scale = React.useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scale, {
+      toValue: 0.9,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.sideTab, pressed ? styles.sidePressed : null]}>
-      <View style={[
+    <Pressable 
+      onPress={onPress} 
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={styles.sideTab}
+    >
+      <Animated.View style={[
         styles.iconFrame, 
-        { backgroundColor: active ? colors.primarySoft : 'transparent' }
+        { 
+          backgroundColor: active ? colors.primarySoft : 'transparent',
+          transform: [{ scale }]
+        }
       ]}>
-        <TabGlyph tab={tabKey} active={active} />
-      </View>
+        <TabGlyph tab={tabKey} color={active ? colors.primary : colors.muted} />
+      </Animated.View>
       <Text style={[
         styles.sideLabel, 
         { color: active ? colors.primary : colors.muted }
@@ -105,57 +133,57 @@ export function SideTab({
 
 function TabGlyph({
   tab,
-  active,
+  color,
 }: {
   tab: Exclude<TabKey, 'sales'>;
-  active: boolean;
+  color: string;
 }) {
-  const { colors } = useAppTheme();
-  const ink = active ? colors.primary : colors.muted;
-
   if (tab === 'inventory') {
     return (
-      <View style={styles.gridIcon}>
-        {[0, 1, 2, 3].map(box => (
-          <View key={box} style={[styles.gridCell, { backgroundColor: ink }]} />
-        ))}
-      </View>
+      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+        <Path d="m3.3 7 8.7 5 8.7-5" />
+        <Path d="M12 22V12" />
+      </Svg>
     );
   }
 
   if (tab === 'products') {
     return (
-      <View style={[styles.cardIcon, { borderColor: ink }]}>
-        <View style={[styles.cardStripe, { backgroundColor: ink }]} />
-      </View>
+      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+        <Path d="M7 7h.01" />
+      </Svg>
     );
   }
 
   if (tab === 'reports') {
     return (
-      <View style={styles.reportIcon}>
-        <View style={[styles.reportBarShort, { backgroundColor: ink }]} />
-        <View style={[styles.reportBarMid, { backgroundColor: ink }]} />
-        <View style={[styles.reportBarTall, { backgroundColor: ink }]} />
-      </View>
+      <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M12 20V10" />
+        <Path d="M18 20V4" />
+        <Path d="M6 20v-4" />
+      </Svg>
     );
   }
 
   return (
-    <View style={[styles.gearRing, { borderColor: ink }]}>
-      <View style={[styles.gearCore, { backgroundColor: ink }]} />
-    </View>
+    <Svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <Circle cx="12" cy="12" r="3" />
+    </Svg>
   );
 }
 
-function SalesGlyph() {
-  const { colors } = useAppTheme();
-  const ink = colors.panel;
+function SalesGlyph({ color }: { color: string }) {
   return (
-    <View style={styles.salesGlyph}>
-      <View style={[styles.salesScanCorners, { borderColor: ink }]} />
-      <View style={[styles.salesCenterDot, { backgroundColor: ink }]} />
-    </View>
+    <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M3 7V5a2 2 0 0 1 2-2h2" />
+      <Path d="M17 3h2a2 2 0 0 1 2 2v2" />
+      <Path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+      <Path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+      <Rect x="7" y="7" width="10" height="10" rx="2" />
+    </Svg>
   );
 }
 
@@ -166,133 +194,65 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'transparent',
+    height: 95, // Increased from 85 to accommodate taller bar
   },
-  surface: {
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 1,
-    paddingHorizontal: 16,
+  content: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    height: 82, // Matched with TabBg height
     alignItems: 'center',
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 8,
+    paddingHorizontal: 12,
   },
-  centerTab: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+  sideSection: {
+    flex: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  centerSection: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    zIndex: 10,
+  },
+  centerTab: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -35, // Adjusted to keep same screen position as before
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
   centerTabPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.96 }],
+    transform: [{ scale: 0.94 }],
   },
-  centerTabActive: {
-    borderWidth: 2,
+  glow: {
+    position: 'absolute',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(23, 58, 99, 0.15)', // Light overlay of primary blue
   },
   sideTab: {
-    width: 60,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
   },
-  sidePressed: {
-    opacity: 0.75,
-  },
   iconFrame: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: "hidden"
   },
   sideLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '700',
-  },
-  gridIcon: {
-    width: 18,
-    height: 18,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 2,
-  },
-  gridCell: {
-    width: 8,
-    height: 8,
-    borderRadius: 2,
-  },
-  cardIcon: {
-    width: 20,
-    height: 14,
-    borderWidth: 2,
-    borderRadius: 4,
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  cardStripe: {
-    height: 3,
-    width: '100%',
-  },
-  reportIcon: {
-    width: 18,
-    height: 18,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 3,
-  },
-  reportBarShort: {
-    width: 4,
-    height: 8,
-    borderRadius: 2,
-  },
-  reportBarMid: {
-    width: 4,
-    height: 12,
-    borderRadius: 2,
-  },
-  reportBarTall: {
-    width: 4,
-    height: 16,
-    borderRadius: 2,
-  },
-  gearRing: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gearCore: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-  },
-  salesGlyph: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  salesScanCorners: {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2.5,
-  },
-  salesCenterDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    letterSpacing: 0.3,
   },
 });
+

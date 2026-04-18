@@ -258,6 +258,10 @@ export function SalesScreen() {
   const isSearching = searchQuery.length > 0 || selectedCategory !== null;
 
 
+  const dismissSearch = () => {
+    setSearchQuery('');
+    setSelectedCategory(null);
+  };
 
   return (
     <View style={styles.root}>
@@ -265,7 +269,13 @@ export function SalesScreen() {
 
       <Screen scrollEnabled={false} bottomPadding={100}>
         <View style={styles.contentWrap}>
-          <View style={styles.headerGap}>
+          {isSearching && (
+            <Pressable 
+              style={[StyleSheet.absoluteFill, { zIndex: 5 }]} 
+              onPress={dismissSearch} 
+            />
+          )}
+          <View style={[styles.headerGap, isSearching && { zIndex: 10 }]}>
             <View style={styles.findGroup}>
               <View style={styles.quickFindRow}>
                 <Text style={[styles.quickFindLabel, { color: colors.ink }]}>Quick find</Text>
