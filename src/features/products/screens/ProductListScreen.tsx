@@ -183,6 +183,6 @@ const styles = StyleSheet.create({
   listContent: {
     paddingTop: 14,
     paddingBottom: 110,
-    gap: 18,
+    gap: 12,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import {
   Card,
@@ -13,6 +13,7 @@ import {
 import { useProductStore } from '../../../stores/useProductStore';
 import { useSalesStore } from '../../../stores/useSalesStore';
 import { useAppTheme } from '../../../theme';
+import type { Product } from '../../../types';
 
 export function InventoryScreen() {
   const { colors, spacing, radius } = useAppTheme();
@@ -148,47 +149,93 @@ export function InventoryScreen() {
         ListHeaderComponent={listHeader}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        renderItem={({item: product}) => (
-          <Card>
-            <View style={styles.inventoryHeader}>
-              <View>
-                <Text style={[styles.inventoryName, { color: colors.ink }]}>{product.name}</Text>
-                <Text style={[styles.inventoryMeta, { color: colors.muted }]}>
-                  {product.category}  |  {formatMoney(product.price)}
-                </Text>
-              </View>
-              <StockPill stock={product.stock} />
-            </View>
-
-            <View style={styles.adjustRow}>
-              {[-1, 1, 5].map(delta => (
-                <Pressable
-                  key={`${product.id}-${delta}`}
-                  onPress={() => handleAdjust(product.id, delta)}
-                  style={({ pressed }) => [
-                    styles.adjustButton,
-                    { 
-                      backgroundColor: colors.panelMuted, 
-                      borderColor: colors.border,
-                      borderRadius: radius.md 
-                    },
-                    delta < 0 ? { backgroundColor: colors.dangerSoft, borderColor: colors.danger } : null,
-                    pressed ? styles.adjustPressed : null,
-                  ]}>
-                  <Text style={[styles.adjustLabel, { color: colors.ink }]}>
-                    {delta > 0 ? `+${delta}` : String(delta)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </Card>
+        renderItem={({ item: product }) => (
+          <InventoryCard 
+            product={product} 
+            onAdjust={handleAdjust} 
+          />
         )}
       />
     </Screen>
   );
 }
 
+function InventoryCard({ 
+  product, 
+  onAdjust 
+}: { 
+  product: Product; 
+  onAdjust: (id: string, delta: number) => void 
+}) {
+  const { colors, radius } = useAppTheme();
+  const [manualValue, setManualValue] = useState('1');
+
+  const handleApply = () => {
+    const val = parseInt(manualValue, 10);
+    if (!isNaN(val) && val !== 0) {
+      onAdjust(product.id, val);
+      setManualValue('1');
+    }
+  };
+
+  return (
+    <Card style={styles.compactCard}>
+      <View style={styles.inventoryHeader}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.inventoryName, { color: colors.ink }]} numberOfLines={1}>{product.name}</Text>
+          <Text style={[styles.inventoryMeta, { color: colors.muted }]}>
+            {product.category} • {formatMoney(product.price)}
+          </Text>
+        </View>
+        <StockPill stock={product.stock} />
+      </View>
+
+      <View style={styles.adjustRow}>
+        <View style={[styles.manualBox, { backgroundColor: colors.panelMuted, borderRadius: radius.md, borderColor: colors.border }]}>
+          <Pressable 
+            onPress={() => onAdjust(product.id, -1)}
+            style={({ pressed }) => [styles.stepBtn, pressed && { opacity: 0.6 }]}>
+            <Text style={[styles.stepBtnText, { color: colors.danger }]}>-1</Text>
+          </Pressable>
+          
+          <View style={[styles.inputDivider, { backgroundColor: colors.border }]} />
+          
+          <TextInput
+            style={[styles.manualInput, { color: colors.ink }]}
+            value={manualValue}
+            onChangeText={setManualValue}
+            keyboardType="numeric"
+            selectTextOnFocus
+          />
+          
+          <View style={[styles.inputDivider, { backgroundColor: colors.border }]} />
+
+          <Pressable 
+            onPress={() => onAdjust(product.id, 1)}
+            style={({ pressed }) => [styles.stepBtn, pressed && { opacity: 0.6 }]}>
+            <Text style={[styles.stepBtnText, { color: colors.primary }]}>+1</Text>
+          </Pressable>
+        </View>
+
+        <Pressable 
+          onPress={handleApply}
+          style={({ pressed }) => [
+            styles.applyBtn, 
+            { backgroundColor: colors.primary, borderRadius: radius.md },
+            pressed && { opacity: 0.8 }
+          ]}>
+          <Text style={[styles.applyBtnText, { color: colors.panel }]}>Update</Text>
+        </Pressable>
+      </View>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
+  compactCard: {
+    padding: 12,
+    gap: 12,
+  },
   metricRow: {
     flexDirection: 'row',
     gap: 8,
@@ -221,32 +268,60 @@ const styles = StyleSheet.create({
   inventoryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 14,
+    alignItems: 'center',
+    gap: 12,
   },
   inventoryName: {
     fontSize: 16,
     fontWeight: '800',
   },
   inventoryMeta: {
-    marginTop: 4,
-    fontSize: 13,
+    marginTop: 2,
+    fontSize: 12,
   },
   adjustRow: {
     flexDirection: 'row',
     gap: 10,
+    alignItems: 'center',
   },
-  adjustButton: {
+  manualBox: {
     flex: 1,
-    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
+    height: 44,
+    overflow: 'hidden',
+  },
+  stepBtn: {
+    width: 44,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  inputDivider: {
+    width: 1,
+    height: '60%',
+  },
+  manualInput: {
+    flex: 1,
+    height: '100%',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    padding: 0,
+  },
+  applyBtn: {
+    paddingHorizontal: 16,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  adjustPressed: {
-    opacity: 0.84,
-  },
-  adjustLabel: {
-    fontSize: 15,
+  applyBtnText: {
+    fontSize: 14,
     fontWeight: '800',
   },
   filterWrap: {
@@ -266,6 +341,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 110,
-    gap: 18,
+    gap: 12,
   },
 });

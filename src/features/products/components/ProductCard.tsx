@@ -24,28 +24,35 @@ export function ProductCard({
   onDelete,
   onShowQr,
 }: ProductCardProps) {
-  const {colors, spacing} = useAppTheme();
+  const {colors, spacing, radius} = useAppTheme();
   return (
-    <Card>
+    <Card style={styles.compactCard}>
       <View style={styles.topRow}>
         <View style={[styles.swatch, {backgroundColor: product.color}]}>
           <Text style={[styles.swatchText, {color: colors.panel}]}>{product.name.slice(0, 1)}</Text>
         </View>
         <View style={styles.main}>
-          <Text style={[styles.name, {color: colors.ink}]}>{product.name}</Text>
-          <Text style={[styles.meta, {color: colors.muted}]}>
-            {product.category}  |  {product.code}
-          </Text>
+          <View style={styles.titleRow}>
+            <Text style={[styles.name, {color: colors.ink}]} numberOfLines={1}>{product.name}</Text>
+            <Text style={[styles.price, {color: colors.ink}]}>{formatMoney(product.price)}</Text>
+          </View>
+          <View style={styles.metaRow}>
+            <Text style={[styles.meta, {color: colors.muted}]}>
+              {product.category} • {product.code}
+            </Text>
+            <View style={styles.badgeWrap}>
+              <StockPill stock={product.stock} />
+              <Tag label={product.unit} />
+            </View>
+          </View>
         </View>
-        <Text style={[styles.price, {color: colors.ink}]}>{formatMoney(product.price)}</Text>
       </View>
 
-      <Text style={[styles.description, {color: colors.muted}]}>{product.description}</Text>
-
-      <View style={styles.badgeRow}>
-        <StockPill stock={product.stock} />
-        <Tag label={product.unit} />
-      </View>
+      {product.description ? (
+        <Text style={[styles.description, {color: colors.muted}]} numberOfLines={1}>
+          {product.description}
+        </Text>
+      ) : null}
 
       <View style={styles.actionRow}>
         <Button
@@ -55,11 +62,12 @@ export function ProductCard({
           compact
         />
         <Button
-          label="Show QR"
+          label="QR"
           onPress={() => onShowQr(product)}
           variant="ghost"
           compact
         />
+        <View style={{ flex: 1 }} />
         <Button
           label="Delete"
           onPress={() => onDelete(product.id)}
@@ -72,48 +80,68 @@ export function ProductCard({
 }
 
 const styles = StyleSheet.create({
+  compactCard: {
+    padding: 12,
+    gap: 10,
+  },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
   swatch: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   swatchText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
   },
   main: {
     flex: 1,
-    gap: 4,
+    gap: 2,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
   },
   name: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  meta: {
-    fontSize: 13,
-  },
-  price: {
+    flex: 1,
     fontSize: 16,
     fontWeight: '800',
   },
-  description: {
-    fontSize: 14,
-    lineHeight: 20,
+  price: {
+    fontSize: 15,
+    fontWeight: '800',
   },
-  badgeRow: {
+  metaRow: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
+  },
+  meta: {
+    fontSize: 12,
+  },
+  badgeWrap: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+  },
+  description: {
+    fontSize: 13,
+    lineHeight: 18,
+    opacity: 0.8,
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
+    alignItems: 'center',
+    marginTop: 2,
   },
 });

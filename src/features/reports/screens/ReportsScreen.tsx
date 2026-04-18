@@ -79,6 +79,29 @@ export function ReportsScreen() {
     );
   }, [products, receipts]);
 
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const yesterdayReceipts = receipts.filter(receipt =>
+    sameDay(new Date(receipt.issuedAt), yesterday),
+  );
+
+  const yesterdayRevenue = yesterdayReceipts.reduce(
+    (sum, receipt) => sum + receipt.total,
+    0,
+  );
+
+  const totalRevenue = receipts.reduce(
+    (sum, receipt) => sum + receipt.total,
+    0,
+  );
+
+  const performancePercent = totalRevenue > 0
+    ? Math.round((yesterdayRevenue / totalRevenue) * 100)
+    : 0;
+
+  const performanceValue = `${performancePercent}%`;
+
   const maxChartAmount = Math.max(
     ...chartData.map(item => item.amount),
     1,
@@ -107,7 +130,7 @@ export function ReportsScreen() {
             label="Transactions"
             value={String(todayReceipts.length)}
           />
-          <MetricCard label="Best seller" value={topProduct} />
+          <MetricCard label="Performance" value={performanceValue} />
         </View>
       </Card>
 
