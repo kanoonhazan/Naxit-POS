@@ -12,9 +12,10 @@ import {
 } from '../../../components/Primitives';
 import { useProductStore } from '../../../stores/useProductStore';
 import { useSalesStore } from '../../../stores/useSalesStore';
-import { theme } from '../../../theme';
+import { useAppTheme } from '../../../theme';
 
 export function InventoryScreen() {
+  const { colors, spacing, radius } = useAppTheme();
   const products = useProductStore(state => state.products);
   const adjustStock = useProductStore(state => state.adjustStock);
   const pushFeedback = useSalesStore(state => state.pushFeedback);
@@ -86,7 +87,7 @@ export function InventoryScreen() {
         </View>
         <View style={styles.filterWrap}>
           <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Stock Level</Text>
+            <Text style={[styles.filterLabel, { color: colors.ink }]}>Stock Level</Text>
             <CategoryFilter
               categories={['Danger', 'Low', 'Healthy']}
               selectedCategory={selectedStockFilter}
@@ -105,8 +106,8 @@ export function InventoryScreen() {
           {lowStock.map(product => (
             <View key={product.id} style={styles.alertRow}>
               <View style={styles.alertTextWrap}>
-                <Text style={styles.alertName}>{product.name}</Text>
-                <Text style={styles.alertMeta}>
+                <Text style={[styles.alertName, { color: colors.ink }]}>{product.name}</Text>
+                <Text style={[styles.alertMeta, { color: colors.muted }]}>
                   {product.category}  |  {product.stock} left
                 </Text>
               </View>
@@ -116,8 +117,8 @@ export function InventoryScreen() {
         </Card>
       ) : (
         <Card>
-          <Text style={styles.goodTitle}>All shelves look healthy</Text>
-          <Text style={styles.goodDetail}>
+          <Text style={[styles.goodTitle, { color: colors.ink }]}>All shelves look healthy</Text>
+          <Text style={[styles.goodDetail, { color: colors.muted }]}>
             No urgent replenishment alerts right now. Staff can stay focused on
             selling.
           </Text>
@@ -127,7 +128,7 @@ export function InventoryScreen() {
       <View style={styles.filterWrap}>
         {categories.length > 0 && (
           <View style={styles.filterGroup}>
-            <Text style={styles.filterLabel}>Product Category</Text>
+            <Text style={[styles.filterLabel, { color: colors.ink }]}>Product Category</Text>
             <CategoryFilter
               categories={categories}
               selectedCategory={selectedCategory}
@@ -151,8 +152,8 @@ export function InventoryScreen() {
           <Card>
             <View style={styles.inventoryHeader}>
               <View>
-                <Text style={styles.inventoryName}>{product.name}</Text>
-                <Text style={styles.inventoryMeta}>
+                <Text style={[styles.inventoryName, { color: colors.ink }]}>{product.name}</Text>
+                <Text style={[styles.inventoryMeta, { color: colors.muted }]}>
                   {product.category}  |  {formatMoney(product.price)}
                 </Text>
               </View>
@@ -166,10 +167,15 @@ export function InventoryScreen() {
                   onPress={() => handleAdjust(product.id, delta)}
                   style={({ pressed }) => [
                     styles.adjustButton,
-                    delta < 0 ? styles.adjustButtonDanger : null,
+                    { 
+                      backgroundColor: colors.panelMuted, 
+                      borderColor: colors.border,
+                      borderRadius: radius.md 
+                    },
+                    delta < 0 ? { backgroundColor: colors.dangerSoft, borderColor: colors.danger } : null,
                     pressed ? styles.adjustPressed : null,
                   ]}>
-                  <Text style={styles.adjustLabel}>
+                  <Text style={[styles.adjustLabel, { color: colors.ink }]}>
                     {delta > 0 ? `+${delta}` : String(delta)}
                   </Text>
                 </Pressable>
@@ -185,13 +191,13 @@ export function InventoryScreen() {
 const styles = StyleSheet.create({
   metricRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   alertRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: 14,
   },
   alertTextWrap: {
     flex: 1,
@@ -200,54 +206,41 @@ const styles = StyleSheet.create({
   alertName: {
     fontSize: 15,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   alertMeta: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   goodTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   goodDetail: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.muted,
   },
   inventoryHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: theme.spacing.md,
+    gap: 14,
   },
   inventoryName: {
     fontSize: 16,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   inventoryMeta: {
     marginTop: 4,
     fontSize: 13,
-    color: theme.colors.muted,
   },
   adjustRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 10,
   },
   adjustButton: {
     flex: 1,
     minHeight: 48,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.panelMuted,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  adjustButtonDanger: {
-    backgroundColor: theme.colors.dangerSoft,
-    borderColor: theme.colors.danger,
   },
   adjustPressed: {
     opacity: 0.84,
@@ -255,11 +248,10 @@ const styles = StyleSheet.create({
   adjustLabel: {
     fontSize: 15,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   filterWrap: {
-    gap: theme.spacing.md,
-    marginTop: theme.spacing.sm,
+    gap: 14,
+    marginTop: 8,
   },
   filterGroup: {
     gap: 8,
@@ -267,14 +259,13 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   headerGap: {
-    gap: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    gap: 18,
+    marginBottom: 18,
   },
   listContent: {
     paddingBottom: 110,
-    gap: theme.spacing.lg,
+    gap: 18,
   },
 });

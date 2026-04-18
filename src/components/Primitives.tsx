@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { theme } from '../theme';
+import { useAppTheme } from '../theme';
 import type { SalesFeedback } from '../types';
 
 type ButtonProps = {
@@ -68,10 +68,12 @@ export function Screen({
   bottomPadding = 110,
   scrollEnabled = true,
 }: ScreenProps) {
+  const { colors } = useAppTheme();
+  
   const content = (
     <>
       {headerAction ? (
-        <View style={[styles.headerRow, { justifyContent: 'flex-end' }]}>
+        <View style={[styles.headerRow, { justifyContent: 'flex-end', gap: 14 }]}>
           {headerAction}
         </View>
       ) : null}
@@ -80,18 +82,18 @@ export function Screen({
   );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       {scrollEnabled ? (
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: bottomPadding },
+            { paddingHorizontal: 18, paddingTop: 14, paddingBottom: bottomPadding, gap: 18 },
           ]}
           showsVerticalScrollIndicator={false}>
           {content}
         </ScrollView>
       ) : (
-        <View style={[styles.scrollContent, { flex: 1, paddingBottom: bottomPadding }]}>
+        <View style={[styles.scrollContent, { flex: 1, paddingHorizontal: 18, paddingTop: 14, paddingBottom: bottomPadding, gap: 18 }]}>
           {content}
         </View>
       )}
@@ -106,7 +108,23 @@ export function Card({
   children: React.ReactNode;
   style?: object;
 }) {
-  return <View style={[styles.card, style]}>{children}</View>;
+  const { colors, radius, shadow } = useAppTheme();
+  return (
+    <View style={[
+      styles.card, 
+      { 
+        backgroundColor: colors.panel, 
+        borderColor: colors.border,
+        borderRadius: radius.lg,
+        padding: 18,
+        gap: 14,
+        ...shadow,
+      }, 
+      style
+    ]}>
+      {children}
+    </View>
+  );
 }
 
 export function SectionTitle({
@@ -118,11 +136,12 @@ export function SectionTitle({
   detail?: string;
   action?: React.ReactNode;
 }) {
+  const { colors } = useAppTheme();
   return (
     <View style={styles.sectionRow}>
       <View style={styles.sectionTextWrap}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {detail ? <Text style={styles.sectionDetail}>{detail}</Text> : null}
+        <Text style={[styles.sectionTitle, { color: colors.ink }]}>{title}</Text>
+        {detail ? <Text style={[styles.sectionDetail, { color: colors.muted }]}>{detail}</Text> : null}
       </View>
       {action}
     </View>
@@ -136,25 +155,64 @@ export function Button({
   compact,
   disabled,
 }: ButtonProps) {
+  const { colors, radius } = useAppTheme();
+  
+  const getVariants = () => {
+    switch (variant) {
+      case 'primary':
+        return {
+          bg: colors.primary,
+          border: colors.primary,
+          text: colors.panel,
+        };
+      case 'secondary':
+        return {
+          bg: colors.panelMuted,
+          border: colors.border,
+          text: colors.ink,
+        };
+      case 'ghost':
+        return {
+          bg: 'transparent',
+          border: colors.border,
+          text: colors.primary,
+        };
+      case 'danger':
+        return {
+          bg: colors.dangerSoft,
+          border: colors.danger,
+          text: colors.danger,
+        };
+      default:
+        return {
+          bg: colors.primary,
+          border: colors.primary,
+          text: colors.panel,
+        };
+    }
+  };
+
+  const v = getVariants();
+
   return (
     <Pressable
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.buttonBase,
-        compact ? styles.buttonCompact : null,
-        variant === 'primary' ? styles.buttonPrimary : null,
-        variant === 'secondary' ? styles.buttonSecondary : null,
-        variant === 'ghost' ? styles.buttonGhost : null,
-        variant === 'danger' ? styles.buttonDanger : null,
-        pressed && !disabled ? styles.buttonPressed : null,
-        disabled ? styles.buttonDisabled : null,
+        {
+          backgroundColor: v.bg,
+          borderColor: v.border,
+          borderRadius: radius.md,
+          opacity: (pressed && !disabled) || disabled ? 0.6 : 1,
+          paddingHorizontal: compact ? 14 : 18,
+          minHeight: compact ? 42 : 52,
+        },
       ]}>
       <Text
         style={[
           styles.buttonLabel,
-          variant === 'primary' ? styles.buttonPrimaryLabel : null,
-          variant === 'ghost' ? styles.buttonGhostLabel : null,
+          { color: v.text },
         ]}>
         {label}
       </Text>
@@ -171,37 +229,66 @@ export function MetricCard({
   value: string;
   tone?: 'default' | 'success' | 'warning';
 }) {
+  const { colors, radius } = useAppTheme();
+  
+  const getToneStyle = () => {
+    switch (tone) {
+      case 'success':
+        return { bg: colors.successSoft };
+      case 'warning':
+        return { bg: colors.warningSoft };
+      default:
+        return { bg: colors.panelMuted };
+    }
+  };
+
   return (
     <View
       style={[
         styles.metricCard,
-        tone === 'success' ? styles.metricCardSuccess : null,
-        tone === 'warning' ? styles.metricCardWarning : null,
+        { 
+          backgroundColor: getToneStyle().bg,
+          borderRadius: radius.md,
+          padding: 14,
+        },
       ]}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={[styles.metricLabel, { color: colors.muted }]}>{label}</Text>
+      <Text style={[styles.metricValue, { color: colors.ink }]}>{value}</Text>
     </View>
   );
 }
 
 export function StockPill({ stock }: { stock: number }) {
+  const { colors, radius } = useAppTheme();
   const tone =
     stock <= 5 ? 'danger' : stock <= 12 ? 'warning' : 'success';
+
+  const getToneStyle = () => {
+    switch (tone) {
+      case 'success':
+        return { bg: colors.successSoft, text: colors.success };
+      case 'warning':
+        return { bg: colors.warningSoft, text: colors.warning };
+      case 'danger':
+        return { bg: colors.dangerSoft, text: colors.danger };
+    }
+  };
+
+  const s = getToneStyle();
 
   return (
     <View
       style={[
         styles.pill,
-        tone === 'success' ? styles.pillSuccess : null,
-        tone === 'warning' ? styles.pillWarning : null,
-        tone === 'danger' ? styles.pillDanger : null,
+        { 
+          backgroundColor: s.bg,
+          borderRadius: radius.pill,
+        },
       ]}>
       <Text
         style={[
           styles.pillText,
-          tone === 'success' ? styles.pillSuccessText : null,
-          tone === 'warning' ? styles.pillWarningText : null,
-          tone === 'danger' ? styles.pillDangerText : null,
+          { color: s.text },
         ]}>
         {stock <= 0 ? 'Out of stock' : `${stock} in stock`}
       </Text>
@@ -216,15 +303,33 @@ export function Tag({
   label: string;
   tone?: 'neutral' | 'success' | 'warning' | 'danger';
 }) {
+  const { colors, radius } = useAppTheme();
+  
+  const getToneStyle = () => {
+    switch (tone) {
+      case 'success':
+        return { bg: colors.successSoft, text: colors.success };
+      case 'warning':
+        return { bg: colors.warningSoft, text: colors.warning };
+      case 'danger':
+        return { bg: colors.dangerSoft, text: colors.danger };
+      default:
+        return { bg: colors.panelMuted, text: colors.ink };
+    }
+  };
+
+  const s = getToneStyle();
+
   return (
     <View
       style={[
         styles.tag,
-        tone === 'success' ? styles.pillSuccess : null,
-        tone === 'warning' ? styles.pillWarning : null,
-        tone === 'danger' ? styles.pillDanger : null,
+        { 
+          backgroundColor: s.bg,
+          borderRadius: radius.pill,
+        },
       ]}>
-      <Text style={styles.tagText}>{label}</Text>
+      <Text style={[styles.tagText, { color: s.text }]}>{label}</Text>
     </View>
   );
 }
@@ -238,22 +343,27 @@ export function CategoryFilter({
   selectedCategory: string | null;
   onSelect: (category: string | null) => void;
 }) {
+  const { colors, radius } = useAppTheme();
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.categoryScrollContent}
-      style={styles.categoryScroll}>
+      contentContainerStyle={[styles.categoryScrollContent, { paddingHorizontal: 18, gap: 10 }]}
+      style={[styles.categoryScroll, { marginHorizontal: -18 }]}>
       <Pressable
         onPress={() => onSelect(null)}
         style={[
           styles.categoryPill,
-          selectedCategory === null ? styles.categoryPillActive : null,
+          { 
+            backgroundColor: selectedCategory === null ? colors.primary : colors.panel,
+            borderColor: selectedCategory === null ? colors.primary : colors.border,
+            borderRadius: radius.pill,
+          },
         ]}>
         <Text
           style={[
             styles.categoryPillText,
-            selectedCategory === null ? styles.categoryPillTextActive : null,
+            { color: selectedCategory === null ? colors.panel : colors.ink },
           ]}>
           All
         </Text>
@@ -264,12 +374,16 @@ export function CategoryFilter({
           onPress={() => onSelect(cat)}
           style={[
             styles.categoryPill,
-            selectedCategory === cat ? styles.categoryPillActive : null,
+            { 
+              backgroundColor: selectedCategory === cat ? colors.primary : colors.panel,
+              borderColor: selectedCategory === cat ? colors.primary : colors.border,
+              borderRadius: radius.pill,
+            },
           ]}>
           <Text
             style={[
               styles.categoryPillText,
-              selectedCategory === cat ? styles.categoryPillTextActive : null,
+              { color: selectedCategory === cat ? colors.panel : colors.ink },
             ]}>
             {cat}
           </Text>
@@ -287,17 +401,28 @@ export function TextField({
   keyboardType = 'default',
   multiline,
 }: InputProps) {
+  const { colors, radius } = useAppTheme();
   return (
     <View style={styles.fieldWrap}>
-      {label ? <Text style={styles.fieldLabel}>{label}</Text> : null}
+      {label ? <Text style={[styles.fieldLabel, { color: colors.ink }]}>{label}</Text> : null}
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         keyboardType={keyboardType}
         multiline={multiline}
-        placeholderTextColor={theme.colors.muted}
-        style={[styles.input, multiline ? styles.inputMultiline : null]}
+        placeholderTextColor={colors.muted}
+        style={[
+          styles.input, 
+          { 
+            backgroundColor: colors.panelMuted,
+            borderColor: colors.border,
+            color: colors.ink,
+            borderRadius: radius.md,
+            paddingHorizontal: 14,
+          },
+          multiline ? styles.inputMultiline : null
+        ]}
       />
     </View>
   );
@@ -309,19 +434,20 @@ export function ToggleRow({
   value,
   onValueChange,
 }: ToggleProps) {
+  const { colors } = useAppTheme();
   return (
     <View style={styles.toggleRow}>
       <View style={styles.toggleTextWrap}>
-        <Text style={styles.toggleLabel}>{label}</Text>
-        <Text style={styles.toggleHint}>{hint}</Text>
+        <Text style={[styles.toggleLabel, { color: colors.ink }]}>{label}</Text>
+        <Text style={[styles.toggleHint, { color: colors.muted }]}>{hint}</Text>
       </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        thumbColor={theme.colors.panel}
+        thumbColor={colors.panel}
         trackColor={{
-          false: theme.colors.border,
-          true: theme.colors.primary,
+          false: colors.border,
+          true: colors.primary,
         }}
       />
     </View>
@@ -366,25 +492,42 @@ export function FeedbackToast({ feedback }: { feedback: SalesFeedback | null }) 
     ]).start();
   }, [feedback, opacity, translateY]);
 
+  const { colors, radius, shadow } = useAppTheme();
+  
   if (!feedback) {
     return null;
   }
+
+  const getToneStyle = () => {
+    switch (feedback.tone) {
+      case 'success':
+        return colors.success;
+      case 'warning':
+        return colors.warning;
+      case 'danger':
+        return colors.danger;
+      default:
+        return colors.primary;
+    }
+  };
 
   return (
     <Animated.View
       pointerEvents="none"
       style={[
         styles.toast,
-        feedback.tone === 'success' ? styles.toastSuccess : null,
-        feedback.tone === 'warning' ? styles.toastWarning : null,
-        feedback.tone === 'danger' ? styles.toastDanger : null,
         {
+          backgroundColor: getToneStyle(),
+          borderRadius: radius.md,
+          padding: 14,
+          marginHorizontal: 18,
+          ...shadow,
           opacity,
           transform: [{ translateY }],
         },
       ]}>
-      <Text style={styles.toastTitle}>{feedback.title}</Text>
-      <Text style={styles.toastDetail}>{feedback.detail}</Text>
+      <Text style={[styles.toastTitle, { color: colors.panel }]}>{feedback.title}</Text>
+      <Text style={[styles.toastDetail, { color: colors.panel }]}>{feedback.detail}</Text>
     </Animated.View>
   );
 }
@@ -396,16 +539,28 @@ export function SheetModal({
   onClose,
   children,
 }: SheetProps) {
+  const { colors, radius } = useAppTheme();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
         <Pressable style={styles.modalScrim} onPress={onClose} />
-        <View style={styles.sheet}>
-          <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>{title}</Text>
-          <Text style={styles.sheetSubtitle}>{subtitle}</Text>
+        <View style={[
+          styles.sheet, 
+          { 
+            backgroundColor: colors.panel,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            paddingTop: 14,
+            paddingHorizontal: 18,
+            paddingBottom: 24,
+            gap: 10,
+          }
+        ]}>
+          <View style={[styles.sheetHandle, { backgroundColor: colors.border, borderRadius: radius.pill }]} />
+          <Text style={[styles.sheetTitle, { color: colors.ink }]}>{title}</Text>
+          <Text style={[styles.sheetSubtitle, { color: colors.muted }]}>{subtitle}</Text>
           <ScrollView
-            contentContainerStyle={styles.sheetContent}
+            contentContainerStyle={[styles.sheetContent, { gap: 14, paddingTop: 10, paddingBottom: 32 }]}
             showsVerticalScrollIndicator={false}>
             {children}
           </ScrollView>
@@ -417,13 +572,16 @@ export function SheetModal({
 
 export function QrPreview({
   value = 'pos-product',
-  accent = theme.colors.primary,
+  accent,
   size = 160,
 }: {
   value?: string;
   accent?: string;
   size?: number;
 }) {
+  const { colors, radius } = useAppTheme();
+  const activeAccent = accent || colors.primary;
+  
   let QRCode: typeof import('react-native-qrcode-svg').default | null = null;
 
   try {
@@ -435,12 +593,20 @@ export function QrPreview({
 
   if (QRCode) {
     return (
-      <View style={styles.qrFrame}>
+      <View style={[
+        styles.qrFrame, 
+        { 
+          backgroundColor: colors.panel,
+          borderColor: colors.border,
+          borderRadius: radius.md,
+          padding: 14,
+        }
+      ]}>
         <QRCode
           value={value}
           size={size}
-          color={accent}
-          backgroundColor={theme.colors.panel}
+          color={activeAccent}
+          backgroundColor={colors.panel}
           quietZone={8}
         />
       </View>
@@ -460,13 +626,21 @@ export function QrPreview({
   });
 
   return (
-    <View style={styles.qrFrame}>
+    <View style={[
+      styles.qrFrame, 
+      { 
+        backgroundColor: colors.panel,
+        borderColor: colors.border,
+        borderRadius: radius.md,
+        padding: 14,
+      }
+    ]}>
       {blocks.map((active, index) => (
         <View
           key={`block-${index}`}
           style={[
             styles.qrBlock,
-            active ? { backgroundColor: accent } : styles.qrBlockEmpty,
+            active ? { backgroundColor: activeAccent } : { backgroundColor: colors.border + '30' },
           ]}
         />
       ))}
@@ -479,16 +653,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.md,
-    paddingBottom: 110,
-    gap: theme.spacing.lg,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    gap: theme.spacing.md,
   },
   headerTextWrap: {
     flex: 1,
@@ -497,28 +666,20 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 30,
     fontWeight: '800',
-    color: theme.colors.ink,
     letterSpacing: -0.7,
   },
   screenSubtitle: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.muted,
   },
   card: {
-    backgroundColor: theme.colors.panel,
-    borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-    ...theme.shadow,
   },
   sectionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   sectionTextWrap: {
     flex: 1,
@@ -527,146 +688,60 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   sectionDetail: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   buttonBase: {
-    minHeight: 52,
-    borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.lg,
     borderWidth: 1,
-  },
-  buttonCompact: {
-    minHeight: 42,
-    paddingHorizontal: theme.spacing.md,
-  },
-  buttonPrimary: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  buttonSecondary: {
-    backgroundColor: theme.colors.panelMuted,
-    borderColor: theme.colors.border,
-  },
-  buttonGhost: {
-    backgroundColor: 'transparent',
-    borderColor: theme.colors.border,
-  },
-  buttonDanger: {
-    backgroundColor: theme.colors.dangerSoft,
-    borderColor: theme.colors.danger,
-  },
-  buttonPressed: {
-    opacity: 0.86,
-  },
-  buttonDisabled: {
-    opacity: 0.45,
   },
   buttonLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: theme.colors.ink,
-  },
-  buttonPrimaryLabel: {
-    color: theme.colors.panel,
-  },
-  buttonGhostLabel: {
-    color: theme.colors.primary,
   },
   metricCard: {
     flex: 1,
-    backgroundColor: theme.colors.panelMuted,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
     gap: 6,
-  },
-  metricCardSuccess: {
-    backgroundColor: theme.colors.successSoft,
-  },
-  metricCardWarning: {
-    backgroundColor: theme.colors.warningSoft,
   },
   metricLabel: {
     fontSize: 12,
-    color: theme.colors.muted,
   },
   metricValue: {
     fontSize: 20,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   pill: {
     alignSelf: 'flex-start',
-    borderRadius: theme.radius.pill,
     paddingHorizontal: 10,
     paddingVertical: 6,
-  },
-  pillSuccess: {
-    backgroundColor: theme.colors.successSoft,
-  },
-  pillWarning: {
-    backgroundColor: theme.colors.warningSoft,
-  },
-  pillDanger: {
-    backgroundColor: theme.colors.dangerSoft,
   },
   pillText: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.ink,
-  },
-  pillSuccessText: {
-    color: theme.colors.success,
-  },
-  pillWarningText: {
-    color: theme.colors.warning,
-  },
-  pillDangerText: {
-    color: theme.colors.danger,
   },
   tag: {
     alignSelf: 'flex-start',
-    backgroundColor: theme.colors.panelMuted,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: theme.radius.pill,
   },
   tagText: {
     fontSize: 12,
-    color: theme.colors.ink,
     fontWeight: '600',
   },
   categoryScroll: {
-    marginHorizontal: -theme.spacing.lg,
   },
   categoryScrollContent: {
-    paddingHorizontal: theme.spacing.lg,
-    gap: theme.spacing.sm,
   },
   categoryPill: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.panel,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  categoryPillActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
   },
   categoryPillText: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.ink,
-  },
-  categoryPillTextActive: {
-    color: theme.colors.panel,
   },
   fieldWrap: {
     gap: 8,
@@ -674,28 +749,22 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   input: {
     minHeight: 52,
-    borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.panelMuted,
-    paddingHorizontal: theme.spacing.md,
     fontSize: 15,
-    color: theme.colors.ink,
   },
   inputMultiline: {
     minHeight: 96,
-    paddingTop: theme.spacing.md,
+    paddingTop: 14,
     textAlignVertical: 'top',
   },
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: 14,
   },
   toggleTextWrap: {
     flex: 1,
@@ -704,81 +773,49 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 15,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   toggleHint: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   toast: {
     position: 'absolute',
-    left: theme.spacing.lg,
-    right: theme.spacing.lg,
-    top: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
+    top: 14,
     gap: 2,
     zIndex: 10,
-    ...theme.shadow,
-  },
-  toastSuccess: {
-    backgroundColor: theme.colors.success,
-  },
-  toastWarning: {
-    backgroundColor: theme.colors.warning,
-  },
-  toastDanger: {
-    backgroundColor: theme.colors.danger,
   },
   toastTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: theme.colors.panel,
   },
   toastDetail: {
     fontSize: 12,
-    color: theme.colors.panel,
     opacity: 0.95,
   },
   modalBackdrop: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(11, 21, 34, 0.28)',
+    backgroundColor: 'rgba(11, 21, 34, 0.42)',
   },
   modalScrim: {
     flex: 1,
   },
   sheet: {
-    backgroundColor: theme.colors.panel,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
     maxHeight: '86%',
-    gap: theme.spacing.sm,
   },
   sheetHandle: {
     width: 54,
     height: 6,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.border,
     alignSelf: 'center',
   },
   sheetTitle: {
     fontSize: 24,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   sheetSubtitle: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.muted,
   },
   sheetContent: {
-    gap: theme.spacing.md,
-    paddingTop: theme.spacing.sm,
-    paddingBottom: theme.spacing.xl,
   },
   qrFrame: {
     width: 186,
@@ -786,18 +823,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
     alignSelf: 'center',
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.panel,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   qrBlock: {
     width: 12,
     height: 12,
     borderRadius: 3,
-  },
-  qrBlockEmpty: {
-    backgroundColor: theme.colors.panelMuted,
   },
 });

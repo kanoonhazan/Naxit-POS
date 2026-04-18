@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {Alert, StyleSheet, Text, View} from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   Button,
@@ -10,17 +10,18 @@ import {
   TextField,
   ToggleRow,
 } from '../../../components/Primitives';
-import {useSettingsStore} from '../../../stores/useSettingsStore';
-import {useSalesStore} from '../../../stores/useSalesStore';
-import {useProductStore} from '../../../stores/useProductStore';
-import {testPrint} from '../../../services/receiptPrinter';
+import { useSettingsStore } from '../../../stores/useSettingsStore';
+import { useSalesStore } from '../../../stores/useSalesStore';
+import { useProductStore } from '../../../stores/useProductStore';
+import { testPrint } from '../../../services/receiptPrinter';
 import {
   saveBackupToDevice,
   pickAndRestoreBackup,
 } from '../../../services/backupService';
-import {theme} from '../../../theme';
+import { useAppTheme } from '../../../theme';
 
 export function SettingsScreen() {
+  const { colors, spacing, radius } = useAppTheme();
   const settings = useSettingsStore(state => state.settings);
   const updateSettings = useSettingsStore(state => state.updateSettings);
   const setSettings = useSettingsStore(state => state.setSettings);
@@ -111,7 +112,7 @@ export function SettingsScreen() {
       'Restore Backup',
       'This will overwrite all current local data (products, receipts, settings). Are you sure?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Restore',
           style: 'destructive',
@@ -120,7 +121,7 @@ export function SettingsScreen() {
               const result = await pickAndRestoreBackup();
               if (result.success) {
                 // Refresh local stores from the new database state
-                const {loadSnapshot} = await import('../../../database/posDb');
+                const { loadSnapshot } = await import('../../../database/posDb');
                 const snapshot = await loadSnapshot();
 
                 setProducts(snapshot.products);
@@ -176,6 +177,35 @@ export function SettingsScreen() {
 
       <Card>
         <SectionTitle
+          title="Visual appearance"
+          detail="Choose how NAXIT looks on this device."
+        />
+        <View style={styles.themeSelector}>
+          {(['system', 'light', 'dark'] as const).map(mode => (
+            <Pressable
+              key={mode}
+              onPress={() => updateSettings({ themeMode: mode })}
+              style={[
+                styles.themeOption,
+                {
+                  borderColor: colors.border,
+                  backgroundColor: settings.themeMode === mode ? colors.primary : 'transparent'
+                }
+              ]}>
+              <Text
+                style={[
+                  styles.themeOptionText,
+                  { color: settings.themeMode === mode ? colors.panel : colors.ink }
+                ]}>
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+
+      <Card>
+        <SectionTitle
           title="Printer setup"
           detail="Bluetooth thermal printer pairing and test actions."
           action={
@@ -215,7 +245,7 @@ export function SettingsScreen() {
           <Button
             label="Test print"
             onPress={() => {
-              handleTestPrint().catch(() => {});
+              handleTestPrint().catch(() => { });
             }}
             variant="secondary"
           />
@@ -249,22 +279,35 @@ export function SettingsScreen() {
 
 const styles = StyleSheet.create({
   settingsActions: {
-    gap: theme.spacing.sm,
+    gap: 10, // Use numbers here since we can't access theme dynamically in styles
   },
   statusPanel: {
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.panelMuted,
-    gap: theme.spacing.sm,
+    padding: 18,
+    borderRadius: 16,
+    gap: 10,
   },
   statusTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   statusDetail: {
     fontSize: 14,
     lineHeight: 21,
-    color: theme.colors.muted,
+  },
+  themeSelector: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  themeOption: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeOptionText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

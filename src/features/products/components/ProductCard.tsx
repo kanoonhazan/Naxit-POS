@@ -8,7 +8,7 @@ import {
   Tag,
   formatMoney,
 } from '../../../components/Primitives';
-import {theme} from '../../../theme';
+import {useAppTheme} from '../../../theme';
 import type {Product} from '../../../types';
 
 type ProductCardProps = {
@@ -24,22 +24,23 @@ export function ProductCard({
   onDelete,
   onShowQr,
 }: ProductCardProps) {
+  const {colors, spacing} = useAppTheme();
   return (
     <Card>
       <View style={styles.topRow}>
         <View style={[styles.swatch, {backgroundColor: product.color}]}>
-          <Text style={styles.swatchText}>{product.name.slice(0, 1)}</Text>
+          <Text style={[styles.swatchText, {color: colors.panel}]}>{product.name.slice(0, 1)}</Text>
         </View>
         <View style={styles.main}>
-          <Text style={styles.name}>{product.name}</Text>
-          <Text style={styles.meta}>
+          <Text style={[styles.name, {color: colors.ink}]}>{product.name}</Text>
+          <Text style={[styles.meta, {color: colors.muted}]}>
             {product.category}  |  {product.code}
           </Text>
         </View>
-        <Text style={styles.price}>{formatMoney(product.price)}</Text>
+        <Text style={[styles.price, {color: colors.ink}]}>{formatMoney(product.price)}</Text>
       </View>
 
-      <Text style={styles.description}>{product.description}</Text>
+      <Text style={[styles.description, {color: colors.muted}]}>{product.description}</Text>
 
       <View style={styles.badgeRow}>
         <StockPill stock={product.stock} />
@@ -74,7 +75,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: 14,
   },
   swatch: {
     width: 48,
@@ -86,7 +87,6 @@ const styles = StyleSheet.create({
   swatchText: {
     fontSize: 18,
     fontWeight: '900',
-    color: theme.colors.panel,
   },
   main: {
     flex: 1,
@@ -95,29 +95,25 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 17,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   meta: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   price: {
     fontSize: 16,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   description: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.muted,
   },
   badgeRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 10,
     alignItems: 'center',
   },
   actionRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 10,
   },
 });

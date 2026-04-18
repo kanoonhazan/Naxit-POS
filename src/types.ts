@@ -53,4 +53,5 @@ export type StoreSettings = {
   currency: string;
   cameraSleepSeconds: number;
   hasSeenOnboarding: boolean;
+  themeMode: 'light' | 'dark' | 'system';
 };

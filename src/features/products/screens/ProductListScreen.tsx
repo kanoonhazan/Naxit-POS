@@ -11,7 +11,7 @@ import {
 } from '../../../components/Primitives';
 import {useProductStore} from '../../../stores/useProductStore';
 import {useSalesStore} from '../../../stores/useSalesStore';
-import {theme} from '../../../theme';
+import {useAppTheme} from '../../../theme';
 import type {Product} from '../../../types';
 
 import {ProductCard} from '../components/ProductCard';
@@ -19,6 +19,7 @@ import {QrLabelSheet} from '../components/QrLabelSheet';
 import {ProductFormSheet} from './ProductFormSheet';
 
 export function ProductListScreen() {
+  const {colors, spacing} = useAppTheme();
   const products = useProductStore(state => state.products);
   const saveProduct = useProductStore(state => state.saveProduct);
   const deleteProduct = useProductStore(state => state.deleteProduct);
@@ -127,8 +128,8 @@ export function ProductListScreen() {
 
   const listEmpty = (
     <Card>
-      <Text style={styles.emptyTitle}>No products found</Text>
-      <Text style={styles.emptyDetail}>
+      <Text style={[styles.emptyTitle, {color: colors.ink}]}>No products found</Text>
+      <Text style={[styles.emptyDetail, {color: colors.muted}]}>
         Keep names short and obvious so the staff never has to think at the
         counter.
       </Text>
@@ -171,19 +172,17 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   emptyDetail: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.muted,
   },
   headerSpacer: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: 18,
   },
   listContent: {
-    paddingTop: theme.spacing.md,
+    paddingTop: 14,
     paddingBottom: 110,
-    gap: theme.spacing.lg,
+    gap: 18,
   },
 });

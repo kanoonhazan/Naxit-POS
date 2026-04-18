@@ -20,7 +20,7 @@ import {
   formatReceiptText,
   printReceipt,
 } from '../../../services/receiptPrinter';
-import { theme } from '../../../theme';
+import { useAppTheme } from '../../../theme';
 import type { PaymentMethod, Product } from '../../../types';
 
 import { CartPanel } from '../components/CartPanel';
@@ -29,6 +29,7 @@ import { InlineCameraBlock } from '../components/InlineCameraBlock';
 import { ReceiptModal } from '../components/ReceiptModal';
 
 export function SalesScreen() {
+  const { colors, spacing, radius, shadow } = useAppTheme();
   const products = useProductStore(state => state.products);
   const getProductById = useProductStore(state => state.getProductById);
   const getProductByCode = useProductStore(state => state.getProductByCode);
@@ -267,7 +268,7 @@ export function SalesScreen() {
           <View style={styles.headerGap}>
             <View style={styles.findGroup}>
               <View style={styles.quickFindRow}>
-                <Text style={styles.quickFindLabel}>Quick find</Text>
+                <Text style={[styles.quickFindLabel, { color: colors.ink }]}>Quick find</Text>
                 <Tag
                   label={printerConnected ? 'Printer ready' : 'Printer offline'}
                   tone={printerConnected ? 'success' : 'warning'}
@@ -290,7 +291,7 @@ export function SalesScreen() {
           </View>
 
           {isSearching && (
-            <View style={styles.resultsOverlay}>
+            <View style={[styles.resultsOverlay, { backgroundColor: colors.panel, borderColor: colors.border, borderRadius: radius.md, ...shadow }]}>
               <FlatList
                 data={filteredProducts}
                 keyExtractor={item => item.id}
@@ -304,24 +305,25 @@ export function SalesScreen() {
                       onPress={() => !isOutOfStock && handleAddToCart(product.id)}
                       style={({ pressed }) => [
                         styles.compactProductTile,
+                        { borderBottomColor: colors.border },
                         pressed && !isOutOfStock ? styles.productTilePressed : null,
                         isOutOfStock ? styles.productTileDisabled : null,
                       ]}>
                       <View
                         style={[
                           styles.productTileBadge,
-                          { backgroundColor: isOutOfStock ? theme.colors.muted : product.color },
+                          { backgroundColor: isOutOfStock ? colors.muted : product.color },
                         ]}
                       />
                       <View style={styles.compactProductInfo}>
-                        <Text style={[styles.productTileName, isOutOfStock && { color: theme.colors.muted, fontSize: 14 }]}>
+                        <Text style={[styles.productTileName, { color: colors.ink }, isOutOfStock && { color: colors.muted, fontSize: 14 }]}>
                           {product.name}
                         </Text>
-                        <Text style={styles.productTileStock}>
+                        <Text style={[styles.productTileStock, { color: colors.muted }]}>
                           {product.stock} left
                         </Text>
                       </View>
-                      <Text style={styles.productTilePrice}>
+                      <Text style={[styles.productTilePrice, { color: colors.ink }]}>
                         {formatMoney(product.price)}
                       </Text>
                     </Pressable>
@@ -368,7 +370,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   findGroup: {
-    rowGap: theme.spacing.sm,
+    rowGap: 8,
   },
   quickFindRow: {
     flexDirection: 'row',
@@ -378,29 +380,22 @@ const styles = StyleSheet.create({
   quickFindLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   actionBar: {
     flexDirection: 'column',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   productTile: {
     flex: 1,
     maxWidth: '48.5%',
-    backgroundColor: theme.colors.panel,
     borderWidth: 1,
-    borderRadius: theme.radius.md,
-    padding: theme.spacing.md,
+    padding: 14,
     gap: 8,
-    shadowColor: '#0B1522',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
     elevation: 2,
   },
   productTilePressed: {
@@ -408,7 +403,6 @@ const styles = StyleSheet.create({
   },
   productTileDisabled: {
     opacity: 0.5,
-    backgroundColor: theme.colors.panelMuted,
   },
   productTileBadge: {
     width: 14,
@@ -418,7 +412,6 @@ const styles = StyleSheet.create({
   productTileName: {
     fontSize: 16,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   productTileFooter: {
     flexDirection: 'row',
@@ -429,59 +422,49 @@ const styles = StyleSheet.create({
   productTilePrice: {
     fontSize: 14,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   productTileStock: {
     fontSize: 12,
-    color: theme.colors.muted,
   },
   headerGap: {
-    gap: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
+    gap: 18,
+    marginBottom: 18,
   },
   rowGap: {
     justifyContent: 'space-between',
   },
   contentWrap: {
     flex: 1,
-    gap: theme.spacing.md,
+    gap: 14,
   },
   resultsOverlay: {
     position: 'absolute',
-    top: 100, // Positioned below search bar
+    top: 100, 
     left: 0,
     right: 0,
     zIndex: 100,
-    backgroundColor: theme.colors.panel,
-    borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     maxHeight: '60%',
-    shadowColor: '#0B1522',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
     elevation: 10,
     overflow: 'hidden',
   },
   compactProductTile: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.md,
-    gap: theme.spacing.md,
+    padding: 14,
+    gap: 14,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   compactProductInfo: {
     flex: 1,
     gap: 2,
   },
   listContent: {
-    paddingBottom: theme.spacing.xl,
+    paddingBottom: 24,
   },
   cartCard: {
     flex: 1,
-    padding: theme.spacing.md,
+    padding: 14,
   },
   cartScroll: {
     flexShrink: 1,

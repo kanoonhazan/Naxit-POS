@@ -21,7 +21,7 @@ import {
   ensureCameraPermission,
   openDeviceSettings,
 } from '../../../device/cameraPermissions';
-import { theme } from '../../../theme';
+import { useAppTheme } from '../../../theme';
 
 type InlineCameraBlockProps = {
   /** Seconds of inactivity before camera sleeps. Comes from settings. */
@@ -33,6 +33,7 @@ type InlineCameraBlockProps = {
 type CamState = 'idle' | 'requesting' | 'ready' | 'denied' | 'blocked' | 'unavailable';
 
 export function InlineCameraBlock({ sleepSeconds, onScanCode, paused }: InlineCameraBlockProps) {
+  const { colors, radius } = useAppTheme();
   const [camState, setCamState] = useState<CamState>('idle');
   const [isAwake, setIsAwake] = useState(false);
   const sleepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -126,7 +127,7 @@ export function InlineCameraBlock({ sleepSeconds, onScanCode, paused }: InlineCa
   };
 
   return (
-    <Pressable onPress={handleTap} style={styles.block}>
+    <Pressable onPress={handleTap} style={[styles.block, { borderColor: colors.border, borderRadius: radius.md }]}>
       {/* AWAKE — camera live */}
       {isAwake && camState === 'ready' ? (
         <View style={styles.cameraWrap}>
@@ -181,8 +182,8 @@ export function InlineCameraBlock({ sleepSeconds, onScanCode, paused }: InlineCa
               <Text style={styles.dormantLabel}>Camera blocked</Text>
               <Pressable
                 onPress={() => openDeviceSettings().catch(() => { })}
-                style={styles.dormantAction}>
-                <Text style={styles.dormantActionText}>Open Settings</Text>
+                style={[styles.dormantAction, { backgroundColor: colors.border }]}>
+                <Text style={[styles.dormantActionText, { color: colors.primary }]}>Open Settings</Text>
               </Pressable>
             </>
           ) : camState === 'unavailable' ? (
@@ -200,13 +201,13 @@ export function InlineCameraBlock({ sleepSeconds, onScanCode, paused }: InlineCa
                 <View style={styles.scannerSquare} />
                 <View style={styles.scannerDot} />
               </View>
-              <Text style={styles.dormantLabel}>
+              <Text style={[styles.dormantLabel, { color: colors.muted }]}>
                 {camState === 'denied' ? 'Permission denied' : 'Tap to scan'}
               </Text>
               {camState === 'denied' ? (
-                <Text style={styles.dormantSub}>Tap to try again</Text>
+                <Text style={[styles.dormantSub, { color: colors.muted + '80' }]}>Tap to try again</Text>
               ) : (
-                <Text style={styles.dormantSub}>Camera sleeps automatically</Text>
+                <Text style={[styles.dormantSub, { color: colors.muted + '80' }]}>Camera sleeps automatically</Text>
               )}
             </>
           )}
@@ -223,11 +224,9 @@ const styles = StyleSheet.create({
   block: {
     width: '100%',
     height: 180,
-    borderRadius: theme.radius.md,
     overflow: 'hidden',
     backgroundColor: '#0D1F30',
     borderWidth: 1,
-    borderColor: '#1E3550',
   },
   cameraWrap: {
     flex: 1,

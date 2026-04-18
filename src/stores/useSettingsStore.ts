@@ -27,6 +27,7 @@ const defaultSettings: StoreSettings = {
   currency: 'LKR',
   cameraSleepSeconds: 8,
   hasSeenOnboarding: false,
+  themeMode: 'system',
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({

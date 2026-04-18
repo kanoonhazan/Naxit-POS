@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {StyleSheet, View} from 'react-native';
 
 import {Button, SheetModal, TextField} from '../../../components/Primitives';
-import {theme} from '../../../theme';
+import {useAppTheme} from '../../../theme';
 import type {Product} from '../../../types';
 
 type ProductDraft = {
@@ -41,6 +41,7 @@ export function ProductFormSheet({
   onClose,
   onSave,
 }: ProductFormSheetProps) {
+  const {colors, spacing} = useAppTheme();
   const [draft, setDraft] = useState<ProductDraft>(
     editProduct
       ? {
@@ -84,7 +85,7 @@ export function ProductFormSheet({
         stock: Number(draft.stock || 0),
         unit: draft.unit || 'unit',
         color: draft.id
-          ? editProduct?.color || theme.colors.primary
+          ? editProduct?.color || colors.primary
           : '#173A63',
         description: draft.description || 'Quick-sell product stored offline.',
       },
@@ -165,7 +166,7 @@ export function ProductFormSheet({
 const styles = StyleSheet.create({
   dualRow: {
     flexDirection: 'row',
-    gap: theme.spacing.md,
+    gap: 14,
   },
   flexOne: {
     flex: 1,

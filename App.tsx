@@ -15,7 +15,7 @@ import {useSettingsStore} from './src/stores/useSettingsStore';
 import {IntroScreen} from './src/components/IntroScreen';
 import {OnboardingScreen} from './src/components/OnboardingScreen';
 import {ErrorBoundary} from './src/components/ErrorBoundary';
-import {theme} from './src/theme';
+import {useAppTheme} from './src/theme';
 import type {TabKey} from './src/types';
 
 import {SalesScreen} from './src/features/sales/screens/SalesScreen';
@@ -27,15 +27,29 @@ import {SettingsScreen} from './src/features/settings/screens/SettingsScreen';
 function App() {
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
-      <ErrorBoundary>
-        <AppContent />
-      </ErrorBoundary>
+      <AppThemeWrapper />
     </SafeAreaProvider>
   );
 }
 
+function AppThemeWrapper() {
+  const {colors, isDark} = useAppTheme();
+  
+  return (
+    <View style={{flex: 1, backgroundColor: colors.background}}>
+      <StatusBar 
+        barStyle={isDark ? 'light-content' : 'dark-content'} 
+        backgroundColor={colors.background} 
+      />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
+    </View>
+  );
+}
+
 function AppContent() {
+  const {colors} = useAppTheme();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<TabKey>('sales');
   const {loading, error, retry} = useAppInit();
@@ -71,7 +85,7 @@ function AppContent() {
 
   if (showIntro || (loading && !error)) {
     return (
-      <View style={styles.appShell}>
+      <View style={[styles.appShell, {backgroundColor: colors.background}]}>
         <IntroScreen />
       </View>
     );
@@ -79,7 +93,7 @@ function AppContent() {
 
   if (settings && !settings.hasSeenOnboarding) {
     return (
-      <View style={styles.appShell}>
+      <View style={[styles.appShell, {backgroundColor: colors.background}]}>
         <OnboardingScreen onComplete={handleOnboardingComplete} />
       </View>
     );
@@ -87,20 +101,20 @@ function AppContent() {
 
   if (error || !settings) {
     return (
-      <View style={styles.centerState}>
-        <Text style={styles.centerTitle}>Device setup needs attention</Text>
-        <Text style={styles.centerBody}>
+      <View style={[styles.centerState, {backgroundColor: colors.background, paddingHorizontal: 24, gap: 14}]}>
+        <Text style={[styles.centerTitle, {color: colors.ink}]}>Device setup needs attention</Text>
+        <Text style={[styles.centerBody, {color: colors.muted}]}>
           {error ?? 'The local database is not ready yet.'}
         </Text>
-        <Pressable onPress={retry} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry local startup</Text>
+        <Pressable onPress={retry} style={[styles.retryButton, {backgroundColor: colors.primary, borderRadius: 16, paddingHorizontal: 18}]}>
+          <Text style={[styles.retryButtonText, {color: colors.panel}]}>Retry local startup</Text>
         </Pressable>
       </View>
     );
   }
 
   return (
-    <View style={styles.appShell}>
+    <View style={[styles.appShell, {backgroundColor: colors.background}]}>
       <View style={styles.screenWrap}>
         {activeTab === 'sales' ? <SalesScreen /> : null}
         {activeTab === 'products' ? <ProductListScreen /> : null}
@@ -117,43 +131,33 @@ function AppContent() {
 const styles = StyleSheet.create({
   appShell: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   screenWrap: {
     flex: 1,
   },
   centerState: {
     flex: 1,
-    backgroundColor: theme.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    gap: theme.spacing.md,
   },
   centerTitle: {
     fontSize: 24,
     fontWeight: '900',
-    color: theme.colors.ink,
     textAlign: 'center',
   },
   centerBody: {
     fontSize: 14,
     lineHeight: 21,
-    color: theme.colors.muted,
     textAlign: 'center',
   },
   retryButton: {
     minHeight: 48,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.lg,
   },
   retryButtonText: {
     fontSize: 15,
     fontWeight: '800',
-    color: theme.colors.panel,
   },
 });
 

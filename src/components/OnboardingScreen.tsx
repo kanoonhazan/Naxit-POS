@@ -8,37 +8,35 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
-import {theme} from '../theme';
+import {useAppTheme} from '../theme';
 import {Button} from './Primitives';
 
 const {width, height} = Dimensions.get('window');
 
-const SLIDES = [
-  {
-    id: '1',
-    title: 'Streamline Your Sales',
-    description: 'Process checkouts in seconds with an intuitive, touch-optimized point of sale interface.',
-    color: theme.colors.primary,
-  },
-  {
-    id: '2',
-    title: 'Powerful Reporting',
-    description: 'Get real-time insights into your revenue, top products, and inventory levels anytime.',
-    color: theme.colors.accent,
-  },
-  {
-    id: '3',
-    title: 'Secure & Offline',
-    description: 'Your data stays on your device. Work without internet and keep your business private.',
-    color: theme.colors.success,
-  },
-];
-
-interface OnboardingScreenProps {
-  onComplete: () => void;
-}
-
 export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
+  const {colors, radius} = useAppTheme();
+  
+  const SLIDES = [
+    {
+      id: '1',
+      title: 'Streamline Your Sales',
+      description: 'Process checkouts in seconds with an intuitive, touch-optimized point of sale interface.',
+      color: colors.primary,
+    },
+    {
+      id: '2',
+      title: 'Powerful Reporting',
+      description: 'Get real-time insights into your revenue, top products, and inventory levels anytime.',
+      color: colors.accent,
+    },
+    {
+      id: '3',
+      title: 'Secure & Offline',
+      description: 'Your data stays on your device. Work without internet and keep your business private.',
+      color: colors.success,
+    },
+  ];
+
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
@@ -61,18 +59,18 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
 
   const renderSlide = ({item}: {item: typeof SLIDES[0]}) => (
     <View style={styles.slide}>
-      <View style={[styles.imagePlaceholder, {backgroundColor: item.color + '15'}]}>
+      <View style={[styles.imagePlaceholder, {backgroundColor: item.color + '25', borderRadius: radius.lg}]}>
         <View style={[styles.circle, {backgroundColor: item.color}]} />
       </View>
       <View style={styles.textContainer}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text style={[styles.title, {color: colors.ink}]}>{item.title}</Text>
+        <Text style={[styles.description, {color: colors.muted}]}>{item.description}</Text>
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: colors.panel}]}>
       <FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -92,7 +90,8 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
               key={index}
               style={[
                 styles.dot,
-                activeIndex === index ? styles.activeDot : null,
+                { backgroundColor: colors.border, borderRadius: 4 },
+                activeIndex === index ? [styles.activeDot, { backgroundColor: colors.primary }] : null,
               ]}
             />
           ))}
@@ -120,22 +119,20 @@ export function OnboardingScreen({onComplete}: OnboardingScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.panel,
   },
   slide: {
     width,
     height,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: 24,
   },
   imagePlaceholder: {
     width: width * 0.7,
     height: width * 0.7,
-    borderRadius: theme.radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.xxl,
+    marginBottom: 40,
   },
   circle: {
     width: 60,
@@ -145,43 +142,39 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     alignItems: 'center',
-    gap: theme.spacing.md,
+    gap: 14,
   },
   title: {
     fontSize: 28,
     fontWeight: '900',
-    color: theme.colors.ink,
     textAlign: 'center',
   },
   description: {
     fontSize: 16,
     lineHeight: 24,
-    color: theme.colors.muted,
     textAlign: 'center',
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: 14,
   },
   footer: {
     position: 'absolute',
     bottom: 50,
     left: 0,
     right: 0,
-    paddingHorizontal: theme.spacing.xl,
-    gap: theme.spacing.lg,
+    paddingHorizontal: 24,
+    gap: 18,
   },
   pagination: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: theme.spacing.md,
+    marginBottom: 14,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: theme.colors.border,
   },
   activeDot: {
     width: 24,
-    backgroundColor: theme.colors.primary,
   },
 });

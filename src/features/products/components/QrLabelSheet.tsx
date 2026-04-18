@@ -3,7 +3,7 @@ import {StyleSheet, Text, View} from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import {Button, Card, SheetModal, formatMoney} from '../../../components/Primitives';
-import {theme} from '../../../theme';
+import {useAppTheme} from '../../../theme';
 import type {Product} from '../../../types';
 
 type QrLabelSheetProps = {
@@ -12,6 +12,7 @@ type QrLabelSheetProps = {
 };
 
 export function QrLabelSheet({product, onClose}: QrLabelSheetProps) {
+  const {colors, spacing, radius} = useAppTheme();
   return (
     <SheetModal
       visible={Boolean(product)}
@@ -21,20 +22,20 @@ export function QrLabelSheet({product, onClose}: QrLabelSheetProps) {
       {product ? (
         <Card>
           <View style={styles.qrWrap}>
-            <View style={styles.qrContainer}>
+            <View style={[styles.qrContainer, {backgroundColor: colors.panel, borderColor: colors.border, borderRadius: radius.md}]}>
               <QRCode
                 value={product.id}
                 size={160}
                 color={product.color}
-                backgroundColor={theme.colors.panel}
+                backgroundColor={colors.panel}
                 quietZone={12}
               />
             </View>
           </View>
           <View style={styles.textBlock}>
-            <Text style={styles.productName}>{product.name}</Text>
-            <Text style={styles.productMeta}>{product.code}</Text>
-            <Text style={styles.productMeta}>
+            <Text style={[styles.productName, {color: colors.ink}]}>{product.name}</Text>
+            <Text style={[styles.productMeta, {color: colors.muted}]}>{product.code}</Text>
+            <Text style={[styles.productMeta, {color: colors.muted}]}>
               {formatMoney(product.price)}
             </Text>
           </View>
@@ -56,14 +57,11 @@ export function QrLabelSheet({product, onClose}: QrLabelSheetProps) {
 const styles = StyleSheet.create({
   qrWrap: {
     alignItems: 'center',
-    paddingVertical: theme.spacing.md,
+    paddingVertical: 14,
   },
   qrContainer: {
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.panel,
+    padding: 14,
     borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   textBlock: {
     alignItems: 'center',
@@ -72,14 +70,12 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 18,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   productMeta: {
     fontSize: 14,
-    color: theme.colors.muted,
   },
   actionRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 10,
   },
 });

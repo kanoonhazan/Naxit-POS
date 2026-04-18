@@ -16,7 +16,7 @@ import {
 } from '../../../components/Primitives';
 import {useSalesStore} from '../../../stores/useSalesStore';
 import {useSettingsStore} from '../../../stores/useSettingsStore';
-import {theme} from '../../../theme';
+import {useAppTheme} from '../../../theme';
 import type {Receipt} from '../../../types';
 
 type DateFilter = 'all' | 'today' | 'week' | 'month' | 'custom';
@@ -42,6 +42,7 @@ function isSameDay(a: Date, b: Date) {
 }
 
 export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
+  const {colors, spacing, radius} = useAppTheme();
   const receipts = useSalesStore(state => state.receipts);
   const currency = useSettingsStore(
     state => state.settings?.currency ?? 'LKR',
@@ -106,27 +107,27 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
   return (
     <View style={styles.root}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={onBack} style={styles.backButton}>
-          <View style={styles.backArrow} />
+      <View style={[styles.header, {backgroundColor: colors.panel, borderBottomColor: colors.border}]}>
+        <Pressable onPress={onBack} style={[styles.backButton, {backgroundColor: colors.panelMuted}]}>
+          <View style={[styles.backArrow, {borderColor: colors.ink}]} />
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>Transaction History</Text>
-          <Text style={styles.headerSub}>{filtered.length} record{filtered.length === 1 ? '' : 's'}</Text>
+          <Text style={[styles.headerTitle, {color: colors.ink}]}>Transaction History</Text>
+          <Text style={[styles.headerSub, {color: colors.muted}]}>{filtered.length} record{filtered.length === 1 ? '' : 's'}</Text>
         </View>
-        <View style={styles.revenuePill}>
-          <Text style={styles.revenueLabel}>{formatMoney(totalRevenue, currency)}</Text>
+        <View style={[styles.revenuePill, {backgroundColor: colors.primarySoft, borderRadius: radius.pill}]}>
+          <Text style={[styles.revenueLabel, {color: colors.primary}]}>{formatMoney(totalRevenue, currency)}</Text>
         </View>
       </View>
 
       {/* Search bar */}
-      <View style={styles.searchWrap}>
+      <View style={[styles.searchWrap, {backgroundColor: colors.panel}]}>
         <TextInput
           value={search}
           onChangeText={setSearch}
           placeholder="Search receipts, items, payment…"
-          placeholderTextColor={theme.colors.muted}
-          style={styles.searchInput}
+          placeholderTextColor={colors.muted}
+          style={[styles.searchInput, {borderColor: colors.border, backgroundColor: colors.panelMuted, color: colors.ink, borderRadius: radius.md}]}
           clearButtonMode="while-editing"
         />
       </View>
@@ -140,8 +141,16 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
               setFilter(f.key);
               if (f.key !== 'custom') { setSelectedMonth(null); }
             }}
-            style={[styles.filterPill, filter === f.key ? styles.filterPillActive : null]}>
-            <Text style={[styles.filterPillText, filter === f.key ? styles.filterPillTextActive : null]}>
+            style={[
+              styles.filterPill, 
+              { borderColor: colors.border, backgroundColor: colors.panel, borderRadius: radius.pill },
+              filter === f.key ? { backgroundColor: colors.primary, borderColor: colors.primary } : null
+            ]}>
+            <Text style={[
+              styles.filterPillText, 
+              { color: colors.ink },
+              filter === f.key ? { color: colors.panel } : null
+            ]}>
               {f.label}
             </Text>
           </Pressable>
@@ -155,14 +164,22 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
             <Pressable
               key={m.value}
               onPress={() => setSelectedMonth(m.value)}
-              style={[styles.monthPill, selectedMonth === m.value ? styles.filterPillActive : null]}>
-              <Text style={[styles.filterPillText, selectedMonth === m.value ? styles.filterPillTextActive : null]}>
+              style={[
+                styles.monthPill, 
+                { borderColor: colors.border, backgroundColor: colors.panelMuted, borderRadius: radius.pill },
+                selectedMonth === m.value ? { backgroundColor: colors.primary, borderColor: colors.primary } : null
+              ]}>
+              <Text style={[
+                styles.filterPillText, 
+                { color: colors.ink },
+                selectedMonth === m.value ? { color: colors.panel } : null
+              ]}>
                 {m.label}
               </Text>
             </Pressable>
           ))}
           {availableMonths.length === 0 && (
-            <Text style={styles.emptyNote}>No receipts recorded yet.</Text>
+            <Text style={[styles.emptyNote, { color: colors.muted }]}>No receipts recorded yet.</Text>
           )}
         </View>
       )}
@@ -175,8 +192,8 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No transactions found</Text>
-            <Text style={styles.emptyBody}>Try adjusting the search or date filter.</Text>
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>No transactions found</Text>
+            <Text style={[styles.emptyBody, { color: colors.muted }]}>Try adjusting the search or date filter.</Text>
           </View>
         }
         renderItem={({item}) => {
@@ -184,47 +201,51 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
           return (
             <Pressable
               onPress={() => setExpandedId(expanded ? null : item.id)}
-              style={styles.txCard}>
+              style={[styles.txCard, { backgroundColor: colors.panel, borderColor: colors.border, borderRadius: radius.md }]}>
               <View style={styles.txHeader}>
                 <View>
-                  <Text style={styles.txNumber}>#{item.number}</Text>
-                  <Text style={styles.txMeta}>
+                  <Text style={[styles.txNumber, { color: colors.ink }]}>#{item.number}</Text>
+                  <Text style={[styles.txMeta, { color: colors.muted }]}>
                     {formatDate(item.issuedAt)}  ·  {formatTime(item.issuedAt)}
                   </Text>
                 </View>
                 <View style={styles.txRight}>
-                  <Text style={styles.txTotal}>{formatMoney(item.total, currency)}</Text>
-                  <View style={[styles.methodBadge, item.paymentMethod === 'cash' ? styles.methodCash : item.paymentMethod === 'card' ? styles.methodCard : styles.methodSplit]}>
-                    <Text style={styles.methodText}>{item.paymentMethod.toUpperCase()}</Text>
+                  <Text style={[styles.txTotal, { color: colors.ink }]}>{formatMoney(item.total, currency)}</Text>
+                  <View style={[
+                    styles.methodBadge, 
+                    { borderRadius: radius.pill },
+                    item.paymentMethod === 'cash' ? { backgroundColor: colors.successSoft } : item.paymentMethod === 'card' ? { backgroundColor: colors.primarySoft } : { backgroundColor: colors.warningSoft }
+                  ]}>
+                    <Text style={[styles.methodText, { color: colors.ink }]}>{item.paymentMethod.toUpperCase()}</Text>
                   </View>
                 </View>
               </View>
 
               {expanded && (
                 <View style={styles.txDetail}>
-                  <View style={styles.txDivider} />
+                  <View style={[styles.txDivider, { backgroundColor: colors.border }]} />
                   {item.items.map((line, idx) => (
                     <View key={idx} style={styles.txLine}>
-                      <Text style={styles.txLineName}>{line.name}</Text>
-                      <Text style={styles.txLineQty}>×{line.quantity}</Text>
-                      <Text style={styles.txLineTotal}>{formatMoney(line.price * line.quantity, currency)}</Text>
+                      <Text style={[styles.txLineName, { color: colors.ink }]}>{line.name}</Text>
+                      <Text style={[styles.txLineQty, { color: colors.muted }]}>×{line.quantity}</Text>
+                      <Text style={[styles.txLineTotal, { color: colors.ink }]}>{formatMoney(line.price * line.quantity, currency)}</Text>
                     </View>
                   ))}
-                  <View style={styles.txDivider} />
+                  <View style={[styles.txDivider, { backgroundColor: colors.border }]} />
                   {item.tax > 0 && (
                     <View style={styles.txSummaryRow}>
-                      <Text style={styles.txSummaryLabel}>Tax</Text>
-                      <Text style={styles.txSummaryValue}>{formatMoney(item.tax, currency)}</Text>
+                      <Text style={[styles.txSummaryLabel, { color: colors.muted }]}>Tax</Text>
+                      <Text style={[styles.txSummaryValue, { color: colors.ink }]}>{formatMoney(item.tax, currency)}</Text>
                     </View>
                   )}
                   <View style={styles.txSummaryRow}>
-                    <Text style={[styles.txSummaryLabel, styles.txSummaryBold]}>Total</Text>
-                    <Text style={[styles.txSummaryValue, styles.txSummaryBold]}>{formatMoney(item.total, currency)}</Text>
+                    <Text style={[styles.txSummaryLabel, { color: colors.muted, fontWeight: '800' }]}>Total</Text>
+                    <Text style={[styles.txSummaryValue, { color: colors.ink, fontWeight: '800' }]}>{formatMoney(item.total, currency)}</Text>
                   </View>
                   {item.changeDue > 0 && (
                     <View style={styles.txSummaryRow}>
-                      <Text style={styles.txSummaryLabel}>Change due</Text>
-                      <Text style={styles.txSummaryValue}>{formatMoney(item.changeDue, currency)}</Text>
+                      <Text style={[styles.txSummaryLabel, { color: colors.muted }]}>Change due</Text>
+                      <Text style={[styles.txSummaryValue, { color: colors.ink }]}>{formatMoney(item.changeDue, currency)}</Text>
                     </View>
                   )}
                 </View>
@@ -240,24 +261,20 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
-    paddingHorizontal: theme.spacing.lg,
+    gap: 14,
+    paddingHorizontal: 18,
     paddingTop: 56,
-    paddingBottom: theme.spacing.md,
-    backgroundColor: theme.colors.panel,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: theme.colors.panelMuted,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -266,7 +283,6 @@ const styles = StyleSheet.create({
     height: 10,
     borderLeftWidth: 2,
     borderBottomWidth: 2,
-    borderColor: theme.colors.ink,
     transform: [{rotate: '45deg'}, {translateX: 2}],
   },
   headerText: {
@@ -276,91 +292,66 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: theme.colors.ink,
     letterSpacing: -0.4,
   },
   headerSub: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   revenuePill: {
-    backgroundColor: theme.colors.primarySoft,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: theme.radius.pill,
   },
   revenueLabel: {
     fontSize: 14,
     fontWeight: '800',
-    color: theme.colors.primary,
   },
   searchWrap: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.panel,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
   },
   searchInput: {
     height: 48,
-    borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.panelMuted,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: 14,
     fontSize: 15,
-    color: theme.colors.ink,
   },
   filterRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
     flexWrap: 'wrap',
   },
   filterPill: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.panel,
-  },
-  filterPillActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
   },
   filterPillText: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.ink,
-  },
-  filterPillTextActive: {
-    color: theme.colors.panel,
   },
   monthRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.sm,
+    gap: 8,
+    paddingHorizontal: 18,
+    paddingBottom: 8,
   },
   monthPill: {
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.panelMuted,
   },
   emptyNote: {
     fontSize: 13,
-    color: theme.colors.muted,
     paddingVertical: 8,
   },
   listContent: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.sm,
+    paddingHorizontal: 18,
+    paddingTop: 8,
     paddingBottom: 120,
-    gap: theme.spacing.sm,
+    gap: 8,
   },
   emptyState: {
     flex: 1,
@@ -371,20 +362,15 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   emptyBody: {
     fontSize: 14,
-    color: theme.colors.muted,
     textAlign: 'center',
   },
   txCard: {
-    backgroundColor: theme.colors.panel,
-    borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
+    padding: 14,
+    gap: 8,
   },
   txHeader: {
     flexDirection: 'row',
@@ -394,11 +380,9 @@ const styles = StyleSheet.create({
   txNumber: {
     fontSize: 15,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   txMeta: {
     fontSize: 12,
-    color: theme.colors.muted,
     marginTop: 2,
   },
   txRight: {
@@ -408,27 +392,20 @@ const styles = StyleSheet.create({
   txTotal: {
     fontSize: 16,
     fontWeight: '900',
-    color: theme.colors.ink,
   },
   methodBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: theme.radius.pill,
   },
-  methodCash: {backgroundColor: theme.colors.successSoft},
-  methodCard: {backgroundColor: theme.colors.primarySoft},
-  methodSplit: {backgroundColor: theme.colors.warningSoft},
   methodText: {
     fontSize: 10,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   txDetail: {
     gap: 6,
   },
   txDivider: {
     height: 1,
-    backgroundColor: theme.colors.border,
     marginVertical: 4,
   },
   txLine: {
@@ -439,18 +416,15 @@ const styles = StyleSheet.create({
   txLineName: {
     flex: 1,
     fontSize: 13,
-    color: theme.colors.ink,
   },
   txLineQty: {
     fontSize: 13,
-    color: theme.colors.muted,
     width: 32,
     textAlign: 'right',
   },
   txLineTotal: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.ink,
     width: 80,
     textAlign: 'right',
   },
@@ -460,14 +434,8 @@ const styles = StyleSheet.create({
   },
   txSummaryLabel: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   txSummaryValue: {
     fontSize: 13,
-    color: theme.colors.ink,
-  },
-  txSummaryBold: {
-    fontWeight: '800',
-    color: theme.colors.ink,
   },
 });

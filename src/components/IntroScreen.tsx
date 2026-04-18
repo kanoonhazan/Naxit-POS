@@ -1,6 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, StyleSheet, Text, View, Dimensions} from 'react-native';
-import {theme} from '../theme';
+import {useAppTheme} from '../theme';
 
 const {height} = Dimensions.get('window');
 
@@ -8,7 +8,8 @@ interface IntroScreenProps {
   onAnimationComplete?: () => void;
 }
 
-export function IntroScreen({onAnimationComplete}: IntroScreenProps) {
+export function IntroScreen({onComplete}: IntroScreenProps) {
+  const {colors} = useAppTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -60,7 +61,7 @@ export function IntroScreen({onAnimationComplete}: IntroScreenProps) {
     <Animated.View 
       style={[
         styles.container, 
-        { opacity: exitAnim }
+        { opacity: exitAnim, backgroundColor: colors.background }
       ]}
     >
       <View style={styles.content}>
@@ -70,7 +71,7 @@ export function IntroScreen({onAnimationComplete}: IntroScreenProps) {
             transform: [{scale: scaleAnim}],
           }}
         >
-          <Text style={styles.logoText}>NAXIT</Text>
+          <Text style={[styles.logoText, {color: colors.primary}]}>NAXIT</Text>
         </Animated.View>
         
         <Animated.View
@@ -79,7 +80,7 @@ export function IntroScreen({onAnimationComplete}: IntroScreenProps) {
             transform: [{translateY: slideAnim}],
           }}
         >
-          <Text style={styles.subtitle}>POINT OF SALE</Text>
+          <Text style={[styles.subtitle, {color: colors.muted}]}>POINT OF SALE</Text>
         </Animated.View>
         
         <Animated.View 
@@ -87,7 +88,8 @@ export function IntroScreen({onAnimationComplete}: IntroScreenProps) {
             styles.dot, 
             { 
               opacity: fadeAnim,
-              transform: [{scale: dotScale}]
+              transform: [{scale: dotScale}],
+              backgroundColor: colors.accent,
             }
           ]} 
         />
@@ -101,7 +103,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -111,14 +112,12 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 48,
     fontWeight: '900',
-    color: theme.colors.primary,
     letterSpacing: 4,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: theme.colors.muted,
     letterSpacing: 6,
     textTransform: 'uppercase',
   },
@@ -126,7 +125,6 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: theme.colors.accent,
-    marginTop: theme.spacing.xl,
+    marginTop: 24,
   },
 });

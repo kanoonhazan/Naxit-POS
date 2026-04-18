@@ -13,7 +13,7 @@ import {
 import {useProductStore} from '../../../stores/useProductStore';
 import {useSalesStore} from '../../../stores/useSalesStore';
 import {useSettingsStore} from '../../../stores/useSettingsStore';
-import {theme} from '../../../theme';
+import {useAppTheme} from '../../../theme';
 import {TransactionHistoryScreen} from './TransactionHistoryScreen';
 
 function sameDay(left: Date, right: Date) {
@@ -30,6 +30,7 @@ function formatTime(iso: string) {
 }
 
 export function ReportsScreen() {
+  const {colors, spacing, radius} = useAppTheme();
   const products = useProductStore(state => state.products);
   const receipts = useSalesStore(state => state.receipts);
   const currency = useSettingsStore(
@@ -120,12 +121,14 @@ export function ReportsScreen() {
           <View style={styles.chartWrap}>
             {chartData.map(item => (
               <View key={item.label} style={styles.chartRow}>
-                <Text style={styles.chartLabel}>{item.label}</Text>
-                <View style={styles.chartTrack}>
+                <Text style={[styles.chartLabel, {color: colors.ink}]}>{item.label}</Text>
+                <View style={[styles.chartTrack, {backgroundColor: colors.panelMuted, borderRadius: radius.pill}]}>
                   <View
                     style={[
                       styles.chartBar,
                       {
+                        backgroundColor: colors.primary,
+                        borderRadius: radius.pill,
                         width: `${Math.max(
                           (item.amount / maxChartAmount) * 100,
                           4,
@@ -134,7 +137,7 @@ export function ReportsScreen() {
                     ]}
                   />
                 </View>
-                <Text style={styles.chartAmount}>
+                <Text style={[styles.chartAmount, {color: colors.muted}]}>
                   {formatMoney(item.amount, currency)}
                 </Text>
               </View>
@@ -149,23 +152,23 @@ export function ReportsScreen() {
           />
           {todayReceipts.length === 0 ? (
             <View style={styles.emptyHistory}>
-              <Text style={styles.emptyHistoryText}>No sales yet today.</Text>
+              <Text style={[styles.emptyHistoryText, {color: colors.muted}]}>No sales yet today.</Text>
             </View>
           ) : (
             <View style={styles.historyList}>
               {todayReceipts.slice(0, 4).map(receipt => (
-                <View key={receipt.id} style={styles.historyRow}>
+                <View key={receipt.id} style={[styles.historyRow, {borderBottomColor: colors.border}]}>
                   <View style={styles.historyLeft}>
-                    <Text style={styles.historyNum}>#{receipt.number}</Text>
-                    <Text style={styles.historyTime}>{formatTime(receipt.issuedAt)}</Text>
+                    <Text style={[styles.historyNum, {color: colors.ink}]}>#{receipt.number}</Text>
+                    <Text style={[styles.historyTime, {color: colors.muted}]}>{formatTime(receipt.issuedAt)}</Text>
                   </View>
-                  <Text style={styles.historyAmount}>
+                  <Text style={[styles.historyAmount, {color: colors.ink}]}>
                     {formatMoney(receipt.total, currency)}
                   </Text>
                 </View>
               ))}
               {todayReceipts.length > 4 && (
-                <Text style={styles.moreNote}>
+                <Text style={[styles.moreNote, {color: colors.muted}]}>
                   +{todayReceipts.length - 4} more…
                 </Text>
               )}
@@ -185,11 +188,11 @@ export function ReportsScreen() {
           title="Quick read"
           detail="The app explains what matters so owners do not need to interpret graphs."
         />
-        <View style={styles.insightCard}>
-          <Text style={styles.insightTitle}>
+        <View style={[styles.insightCard, {backgroundColor: colors.primarySoft, borderRadius: radius.md}]}>
+          <Text style={[styles.insightTitle, {color: colors.primary}]}>
             What the owner should do next
           </Text>
-          <Text style={styles.insightBody}>
+          <Text style={[styles.insightBody, {color: colors.ink}]}>
             {todayRevenue > 0
               ? `Sales are active today. Restock ${topProduct} first and keep the scanner view open at the counter.`
               : 'No sales logged today yet. Open the Sales tab and keep fast keys visible for walk-in orders.'}
@@ -203,11 +206,11 @@ export function ReportsScreen() {
 const styles = StyleSheet.create({
   metricRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 10,
   },
   twoCol: {
     flexDirection: 'row',
-    gap: theme.spacing.lg,
+    gap: 18,
     flexWrap: 'wrap',
   },
   colFlex: {
@@ -215,36 +218,30 @@ const styles = StyleSheet.create({
     minWidth: 240,
   },
   chartWrap: {
-    gap: theme.spacing.sm,
+    gap: 10,
   },
   chartRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.sm,
+    gap: 10,
   },
   chartLabel: {
     width: 36,
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   chartTrack: {
     flex: 1,
     height: 14,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.panelMuted,
     overflow: 'hidden',
   },
   chartBar: {
     height: '100%',
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.primary,
   },
   chartAmount: {
     width: 76,
     textAlign: 'right',
     fontSize: 11,
-    color: theme.colors.muted,
   },
   historyList: {
     gap: 6,
@@ -255,7 +252,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   historyLeft: {
     gap: 1,
@@ -263,16 +259,13 @@ const styles = StyleSheet.create({
   historyNum: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.ink,
   },
   historyTime: {
     fontSize: 11,
-    color: theme.colors.muted,
   },
   historyAmount: {
     fontSize: 14,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   emptyHistory: {
     paddingVertical: 20,
@@ -280,29 +273,23 @@ const styles = StyleSheet.create({
   },
   emptyHistoryText: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   moreNote: {
     fontSize: 12,
-    color: theme.colors.muted,
     textAlign: 'center',
     paddingVertical: 4,
   },
   insightCard: {
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primarySoft,
-    gap: theme.spacing.sm,
+    padding: 18,
+    gap: 10,
   },
   insightTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: theme.colors.primary,
   },
   insightBody: {
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.ink,
   },
 });
 

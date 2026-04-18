@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { theme } from '../theme';
+import { useAppTheme } from '../theme';
 import type { TabKey } from '../types';
 
 const sideTabs: Array<{ key: Exclude<TabKey, 'sales'>; label: string }> = [
@@ -20,12 +20,20 @@ export function TabBar({
   onChange: (tab: TabKey) => void;
   bottomInset: number;
 }) {
+  const { colors, shadow } = useAppTheme();
   const leftTabs = sideTabs.slice(0, 2);
   const rightTabs = sideTabs.slice(2);
 
   return (
-    <View style={[styles.safeWrap, { paddingBottom: Math.max(bottomInset, 16) }]}>
-      <View style={styles.surface}>
+    <View style={[styles.safeWrap, { paddingBottom: Math.max(bottomInset, 16), paddingHorizontal: 18 }]}>
+      <View style={[
+        styles.surface, 
+        { 
+          backgroundColor: colors.panel, 
+          borderColor: colors.border,
+          ...shadow 
+        }
+      ]}>
         {leftTabs.map(tab => (
           <SideTab
             key={tab.key}
@@ -40,8 +48,13 @@ export function TabBar({
           onPress={() => onChange('sales')}
           style={({ pressed }) => [
             styles.centerTab,
+            {
+              backgroundColor: colors.primary,
+              shadowColor: colors.primary,
+              borderColor: colors.border,
+            },
             pressed ? styles.centerTabPressed : null,
-            activeTab === 'sales' ? styles.centerTabActive : null,
+            activeTab === 'sales' ? [styles.centerTabActive, { borderColor: colors.border }] : null,
           ]}>
           <SalesGlyph />
         </Pressable>
@@ -60,7 +73,7 @@ export function TabBar({
   );
 }
 
-function SideTab({
+export function SideTab({
   active,
   label,
   tabKey,
@@ -71,12 +84,19 @@ function SideTab({
   tabKey: Exclude<TabKey, 'sales'>;
   onPress: () => void;
 }) {
+  const { colors } = useAppTheme();
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.sideTab, pressed ? styles.sidePressed : null]}>
-      <View style={[styles.iconFrame, active ? styles.iconFrameActive : null]}>
+      <View style={[
+        styles.iconFrame, 
+        { backgroundColor: active ? colors.primarySoft : 'transparent' }
+      ]}>
         <TabGlyph tab={tabKey} active={active} />
       </View>
-      <Text style={[styles.sideLabel, active ? styles.sideLabelActive : null]} numberOfLines={1}>
+      <Text style={[
+        styles.sideLabel, 
+        { color: active ? colors.primary : colors.muted }
+      ]} numberOfLines={1}>
         {label}
       </Text>
     </Pressable>
@@ -90,7 +110,8 @@ function TabGlyph({
   tab: Exclude<TabKey, 'sales'>;
   active: boolean;
 }) {
-  const ink = active ? theme.colors.primary : '#8290A3';
+  const { colors } = useAppTheme();
+  const ink = active ? colors.primary : colors.muted;
 
   if (tab === 'inventory') {
     return (
@@ -128,7 +149,8 @@ function TabGlyph({
 }
 
 function SalesGlyph() {
-  const ink = theme.colors.panel;
+  const { colors } = useAppTheme();
+  const ink = colors.panel;
   return (
     <View style={styles.salesGlyph}>
       <View style={[styles.salesScanCorners, { borderColor: ink }]} />
@@ -144,19 +166,15 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'transparent',
-    paddingHorizontal: theme.spacing.lg,
   },
   surface: {
     height: 72,
-    backgroundColor: theme.colors.panel,
     borderRadius: 36,
     borderWidth: 1,
-    borderColor: '#DCE4ED',
     paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#0B1522',
     shadowOpacity: 0.1,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
@@ -166,10 +184,8 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: theme.colors.primary,
     shadowOpacity: 0.25,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
@@ -180,7 +196,6 @@ const styles = StyleSheet.create({
   },
   centerTabActive: {
     borderWidth: 2,
-    borderColor: '#DCE4ED',
   },
   sideTab: {
     width: 60,
@@ -199,16 +214,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: "hidden"
   },
-  iconFrameActive: {
-    backgroundColor: theme.colors.primarySoft,
-  },
   sideLabel: {
     fontSize: 8,
     fontWeight: '700',
-    color: '#96A4B5',
-  },
-  sideLabelActive: {
-    color: theme.colors.primary,
   },
   gridIcon: {
     width: 18,
@@ -281,12 +289,10 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2.5,
-    borderColor: theme.colors.panel,
   },
   salesCenterDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: theme.colors.panel,
   },
 });

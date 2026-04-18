@@ -2,7 +2,7 @@ import React from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 
 import {Button, formatMoney} from '../../../components/Primitives';
-import {theme} from '../../../theme';
+import {useAppTheme} from '../../../theme';
 import type {Product} from '../../../types';
 
 type CartProduct = Product & {
@@ -23,11 +23,13 @@ export function CartPanel({
   onRemoveItem,
   onScanFirst,
 }: CartPanelProps) {
+  const {colors, spacing, radius} = useAppTheme();
+  
   if (items.length === 0) {
     return (
-      <View style={styles.emptyCart}>
-        <Text style={styles.emptyCartTitle}>No items yet</Text>
-        <Text style={styles.emptyCartBody}>
+      <View style={[styles.emptyCart, { backgroundColor: colors.panelMuted, borderRadius: radius.md }]}>
+        <Text style={[styles.emptyCartTitle, { color: colors.ink }]}>No items yet</Text>
+        <Text style={[styles.emptyCartBody, { color: colors.muted }]}>
           The first scan should be the only decision the cashier makes.
         </Text>
         <Button label="Scan first item" onPress={onScanFirst} />
@@ -38,36 +40,36 @@ export function CartPanel({
   return (
     <View style={styles.cartList}>
       {items.map(item => (
-        <View key={item.id} style={styles.cartRow}>
+        <View key={item.id} style={[styles.cartRow, { borderBottomColor: colors.border }]}>
           <View style={[styles.cartAvatar, {backgroundColor: item.color}]}>
-            <Text style={styles.cartAvatarText}>{item.name.slice(0, 1)}</Text>
+            <Text style={[styles.cartAvatarText, { color: colors.panel }]}>{item.name.slice(0, 1)}</Text>
           </View>
 
           <View style={styles.cartTextWrap}>
-            <Text style={styles.cartName}>{item.name}</Text>
-            <Text style={styles.cartMeta}>{formatMoney(item.price)} each</Text>
+            <Text style={[styles.cartName, { color: colors.ink }]}>{item.name}</Text>
+            <Text style={[styles.cartMeta, { color: colors.muted }]}>{formatMoney(item.price)} each</Text>
           </View>
 
           <View style={styles.cartActionWrap}>
-            <View style={styles.qtyStepper}>
+            <View style={[styles.qtyStepper, { backgroundColor: colors.panelMuted, borderRadius: radius.pill }]}>
               <Pressable
                 onPress={() => onUpdateQuantity(item.id, -1)}
                 style={styles.qtyTap}>
-                <Text style={styles.qtyTapText}>-</Text>
+                <Text style={[styles.qtyTapText, { color: colors.primary }]}>-</Text>
               </Pressable>
-              <Text style={styles.qtyCount}>{item.quantity}</Text>
+              <Text style={[styles.qtyCount, { color: colors.ink }]}>{item.quantity}</Text>
               <Pressable
                 onPress={() => onUpdateQuantity(item.id, 1)}
                 style={styles.qtyTap}>
-                <Text style={styles.qtyTapText}>+</Text>
+                <Text style={[styles.qtyTapText, { color: colors.primary }]}>+</Text>
               </Pressable>
             </View>
 
-            <Text style={styles.cartLineTotal}>
+            <Text style={[styles.cartLineTotal, { color: colors.ink }]}>
               {formatMoney(item.lineTotal)}
             </Text>
             <Pressable onPress={() => onRemoveItem(item.id)}>
-              <Text style={styles.cartRemove}>Remove</Text>
+              <Text style={[styles.cartRemove, { color: colors.danger }]}>Remove</Text>
             </Pressable>
           </View>
         </View>
@@ -78,31 +80,26 @@ export function CartPanel({
 
 const styles = StyleSheet.create({
   emptyCart: {
-    gap: theme.spacing.md,
-    padding: theme.spacing.lg,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.panelMuted,
+    gap: 14,
+    padding: 18,
   },
   emptyCartTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: theme.colors.ink,
   },
   emptyCartBody: {
     fontSize: 14,
     lineHeight: 21,
-    color: theme.colors.muted,
   },
   cartList: {
-    gap: theme.spacing.md,
+    gap: 14,
   },
   cartRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
+    gap: 14,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   cartAvatar: {
     width: 46,
@@ -114,7 +111,6 @@ const styles = StyleSheet.create({
   cartAvatarText: {
     fontSize: 18,
     fontWeight: '900',
-    color: theme.colors.panel,
   },
   cartTextWrap: {
     flex: 1,
@@ -123,11 +119,9 @@ const styles = StyleSheet.create({
   cartName: {
     fontSize: 15,
     fontWeight: '800',
-    color: theme.colors.ink,
   },
   cartMeta: {
     fontSize: 13,
-    color: theme.colors.muted,
   },
   cartActionWrap: {
     alignItems: 'flex-end',
@@ -139,8 +133,6 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 6,
     minHeight: 36,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.panelMuted,
   },
   qtyTap: {
     width: 28,
@@ -152,23 +144,19 @@ const styles = StyleSheet.create({
   qtyTapText: {
     fontSize: 20,
     fontWeight: '700',
-    color: theme.colors.primary,
   },
   qtyCount: {
     fontSize: 15,
     fontWeight: '900',
-    color: theme.colors.ink,
     minWidth: 18,
     textAlign: 'center',
   },
   cartLineTotal: {
     fontSize: 15,
     fontWeight: '900',
-    color: theme.colors.ink,
   },
   cartRemove: {
     fontSize: 12,
     fontWeight: '700',
-    color: theme.colors.danger,
   },
 });
