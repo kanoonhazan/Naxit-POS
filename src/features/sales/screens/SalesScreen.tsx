@@ -53,6 +53,10 @@ export function SalesScreen() {
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [checkoutStage, setCheckoutStage] = useState<'cart' | 'billing'>('cart');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
 
   const categories = useMemo(
     () => Array.from(new Set(products.map(p => p.category).filter(Boolean))),
@@ -203,7 +207,7 @@ export function SalesScreen() {
     }
   };
 
-  const handleCheckout = async (paymentMethod: PaymentMethod) => {
+  const handleCheckout = async () => {
     if (!settings) {
       return;
     }
@@ -233,10 +237,16 @@ export function SalesScreen() {
       items: receiptItems,
       subtotal,
       paymentMethod,
+      customerName: customerName.trim() || undefined,
+      customerPhone: customerPhone.trim() || undefined,
       receiptCount: receipts.length,
     });
 
     clearCart();
+    setCheckoutStage('cart');
+    setCustomerName('');
+    setCustomerPhone('');
+    setPaymentMethod('cash');
 
     // Auto-print if enabled
     if (settings.autoPrint && settings.printerConnected) {
@@ -263,6 +273,8 @@ export function SalesScreen() {
     setSelectedCategory(null);
   };
 
+  const paymentMethods: PaymentMethod[] = ['cash', 'card', 'split'];
+
   return (
     <View style={styles.root}>
       <FeedbackToast feedback={feedback} />
@@ -275,30 +287,42 @@ export function SalesScreen() {
               onPress={dismissSearch} 
             />
           )}
-          <View style={[styles.headerGap, isSearching && { zIndex: 10 }]}>
-            <View style={styles.findGroup}>
-              <View style={styles.quickFindRow}>
-                <Text style={[styles.quickFindLabel, { color: colors.ink }]}>Quick find</Text>
-                <Tag
-                  label={printerConnected ? 'Printer ready' : 'Printer offline'}
-                  tone={printerConnected ? 'success' : 'warning'}
-                />
-              </View>
-              <View style={styles.actionBar}>
-                <TextField
-                  label=""
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Search by name or code"
-                />
-                <InlineCameraBlock
-                  sleepSeconds={settings?.cameraSleepSeconds ?? 8}
-                  onScanCode={handleScanCode}
-                  paused={isSearching}
-                />
+          {checkoutStage === 'cart' ? (
+            <View style={[styles.headerGap, isSearching && { zIndex: 10 }]}>
+              <View style={styles.findGroup}>
+                <View style={styles.quickFindRow}>
+                  <Text style={[styles.quickFindLabel, { color: colors.ink }]}>Quick find</Text>
+                  <Tag
+                    label={printerConnected ? 'Printer ready' : 'Printer offline'}
+                    tone={printerConnected ? 'success' : 'warning'}
+                  />
+                </View>
+                <View style={styles.actionBar}>
+                  <TextField
+                    label=""
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Search by name or code"
+                  />
+                  <InlineCameraBlock
+                    sleepSeconds={settings?.cameraSleepSeconds ?? 8}
+                    onScanCode={handleScanCode}
+                    paused={isSearching}
+                  />
+                </View>
               </View>
             </View>
-          </View>
+          ) : (
+            <View style={[styles.billingHeader, { backgroundColor: colors.primary + '10', borderRadius: radius.lg, borderColor: colors.primary + '30' }]}>
+              <View style={styles.billingHeaderInfo}>
+                <Text style={[styles.billingHeaderLabel, { color: colors.muted }]}>Total amount</Text>
+                <Text style={[styles.billingHeaderTotal, { color: colors.primary }]}>{formatMoney(subtotal)}</Text>
+              </View>
+              <View style={[styles.billingHeaderTag, { backgroundColor: colors.primary, borderRadius: radius.pill }]}>
+                <Text style={[styles.billingHeaderTagText, { color: colors.panel }]}>{totalItems} {totalItems === 1 ? 'Item' : 'Items'}</Text>
+              </View>
+            </View>
+          )}
 
           {isSearching && (
             <View style={[styles.resultsOverlay, { backgroundColor: colors.panel, borderColor: colors.border, borderRadius: radius.md, ...shadow }]}>
@@ -344,22 +368,92 @@ export function SalesScreen() {
           )}
 
           <Card style={styles.cartCard}>
-            <CheckoutDock
-              subtotal={subtotal}
-              totalItems={totalItems}
-              hasItems={cartProducts.length > 0}
-              onCheckout={handleCheckout}
-            />
-            <ScrollView
-              style={styles.cartScroll}
-              showsVerticalScrollIndicator={false}>
-              <CartPanel
-                items={cartProducts}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                onScanFirst={handleDemoScan}
-              />
-            </ScrollView>
+            {checkoutStage === 'cart' ? (
+              <>
+                <CheckoutDock
+                  subtotal={subtotal}
+                  totalItems={totalItems}
+                  hasItems={cartProducts.length > 0}
+                  onPrepareCheckout={() => {
+                    dismissSearch();
+                    setCheckoutStage('billing');
+                  }}
+                />
+                <ScrollView
+                  style={styles.cartScroll}
+                  showsVerticalScrollIndicator={false}>
+                  <CartPanel
+                    items={cartProducts}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    onRemoveItem={handleRemoveItem}
+                    onScanFirst={handleDemoScan}
+                  />
+                </ScrollView>
+              </>
+            ) : (
+              <ScrollView style={styles.billingView} showsVerticalScrollIndicator={false}>
+                <SectionTitle title="Billing information" detail="Enter customer details for receipt" />
+                <View style={styles.billingForm}>
+                  <TextField 
+                    label="Customer name" 
+                    value={customerName} 
+                    onChangeText={setCustomerName} 
+                    placeholder="e.g. John Doe"
+                  />
+                  <TextField 
+                    label="Phone number" 
+                    value={customerPhone} 
+                    onChangeText={setCustomerPhone} 
+                    placeholder="e.g. 077 123 4567"
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.paymentGroup}>
+                  <Text style={[styles.paymentLabel, { color: colors.ink }]}>Payment method</Text>
+                  <View style={[styles.paymentSelector, { backgroundColor: colors.background, borderRadius: radius.md }]}>
+                    {paymentMethods.map(method => {
+                      const active = paymentMethod === method;
+                      return (
+                        <Pressable
+                          key={method}
+                          onPress={() => setPaymentMethod(method)}
+                          style={[
+                            styles.paymentOption,
+                            { borderRadius: radius.sm },
+                            active ? [styles.paymentOptionActive, { backgroundColor: colors.panel }] : null,
+                          ]}>
+                          <Text
+                            style={[
+                              styles.paymentOptionText,
+                              { color: colors.muted },
+                              active ? { color: colors.ink } : null,
+                            ]}>
+                            {method.toUpperCase()}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View style={styles.billingActions}>
+                  <View style={{ flex: 1 }}>
+                    <Button 
+                      label="Back" 
+                      variant="ghost" 
+                      onPress={() => setCheckoutStage('cart')} 
+                    />
+                  </View>
+                  <View style={{ flex: 2 }}>
+                    <Button 
+                      label={`Pay ${formatMoney(subtotal)}`} 
+                      onPress={handleCheckout} 
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+            )}
           </Card>
         </View>
       </Screen>
@@ -478,5 +572,79 @@ const styles = StyleSheet.create({
   },
   cartScroll: {
     flexShrink: 1,
+  },
+  billingView: {
+    flex: 1,
+  },
+  billingForm: {
+    gap: 14,
+    marginTop: 18,
+  },
+  paymentGroup: {
+    marginTop: 24,
+    gap: 10,
+  },
+  paymentLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  paymentSelector: {
+    flexDirection: 'row',
+    padding: 4,
+    gap: 4,
+  },
+  paymentOption: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentOptionActive: {
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 2,
+  },
+  paymentOptionText: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  billingActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 32,
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  billingHeader: {
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  billingHeaderInfo: {
+    gap: 4,
+  },
+  billingHeaderLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  billingHeaderTotal: {
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: -1,
+  },
+  billingHeaderTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  billingHeaderTagText: {
+    fontSize: 14,
+    fontWeight: '800',
   },
 });

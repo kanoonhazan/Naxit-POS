@@ -1,28 +1,23 @@
-import React, {useState} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
-import {Button, formatMoney} from '../../../components/Primitives';
-import {useAppTheme} from '../../../theme';
-import type {PaymentMethod} from '../../../types';
-
-const paymentMethods: PaymentMethod[] = ['cash', 'card', 'split'];
+import { Button, formatMoney } from '../../../components/Primitives';
+import { useAppTheme } from '../../../theme';
 
 type CheckoutDockProps = {
   subtotal: number;
   totalItems: number;
   hasItems: boolean;
-  printerConnected: boolean;
-  onCheckout: (paymentMethod: PaymentMethod) => void;
+  onPrepareCheckout: () => void;
 };
 
 export function CheckoutDock({
   subtotal,
   totalItems,
   hasItems,
-  onCheckout,
+  onPrepareCheckout,
 }: CheckoutDockProps) {
-  const {colors, radius} = useAppTheme();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const { colors, radius } = useAppTheme();
 
   return (
     <View style={[styles.dock, { borderBottomColor: colors.border }]}>
@@ -39,35 +34,10 @@ export function CheckoutDock({
         <View style={styles.actionWrap}>
           <Button
             label="Checkout"
-            onPress={() => onCheckout(paymentMethod)}
+            onPress={onPrepareCheckout}
             disabled={!hasItems}
           />
         </View>
-      </View>
-
-      <View style={[styles.paymentSelector, { backgroundColor: colors.background, borderRadius: radius.md }]}>
-        {paymentMethods.map(method => {
-          const active = paymentMethod === method;
-          return (
-            <Pressable
-              key={method}
-              onPress={() => setPaymentMethod(method)}
-              style={[
-                styles.paymentOption,
-                { borderRadius: radius.sm },
-                active ? [styles.paymentOptionActive, { backgroundColor: colors.panel }] : null,
-              ]}>
-              <Text
-                style={[
-                  styles.paymentOptionText,
-                  { color: colors.muted },
-                  active ? { color: colors.ink } : null,
-                ]}>
-                {method.toUpperCase()}
-              </Text>
-            </Pressable>
-          );
-        })}
       </View>
     </View>
   );
@@ -106,26 +76,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-  paymentSelector: {
-    flexDirection: 'row',
-    padding: 3,
-    gap: 3,
-  },
-  paymentOption: {
-    flex: 1,
-    minHeight: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  paymentOptionActive: {
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: {width: 0, height: 2},
-    elevation: 2,
-  },
-  paymentOptionText: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
 });
+

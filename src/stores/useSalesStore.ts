@@ -20,6 +20,8 @@ type SalesStore = {
     items: Receipt['items'];
     subtotal: number;
     paymentMethod: PaymentMethod;
+    customerName?: string;
+    customerPhone?: string;
     receiptCount: number;
   }) => Promise<Receipt>;
 
@@ -44,7 +46,7 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
     });
   },
 
-  checkout: async ({items, subtotal, paymentMethod, receiptCount}) => {
+  checkout: async ({items, subtotal, paymentMethod, customerName, customerPhone, receiptCount}) => {
     const tax = 0;
     const total = subtotal + tax;
 
@@ -58,6 +60,8 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
       paidAmount: total,
       changeDue: 0,
       paymentMethod,
+      customerName,
+      customerPhone,
       issuedAt: new Date().toISOString(),
     };
 

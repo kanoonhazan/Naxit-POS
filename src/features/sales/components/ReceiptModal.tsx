@@ -43,6 +43,21 @@ export function ReceiptModal({
               minute: '2-digit',
             })}
           </Text>
+          
+          {(receipt.customerName || receipt.customerPhone) && (
+            <View style={[styles.customerSection, { backgroundColor: colors.panelMuted, borderRadius: radius.md }]}>
+              {receipt.customerName && (
+                <Text style={[styles.customerLabel, { color: colors.ink }]}>
+                  Client: <Text style={styles.customerValue}>{receipt.customerName}</Text>
+                </Text>
+              )}
+              {receipt.customerPhone && (
+                <Text style={[styles.customerLabel, { color: colors.ink }]}>
+                  Phone: <Text style={styles.customerValue}>{receipt.customerPhone}</Text>
+                </Text>
+              )}
+            </View>
+          )}
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
@@ -151,5 +166,16 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     gap: 10,
+  },
+  customerSection: {
+    padding: 10,
+    gap: 4,
+  },
+  customerLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  customerValue: {
+    fontWeight: '400',
   },
 });

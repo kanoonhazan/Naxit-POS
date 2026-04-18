@@ -34,6 +34,8 @@ export type Receipt = {
   paidAmount: number;
   changeDue: number;
   paymentMethod: PaymentMethod;
+  customerName?: string;
+  customerPhone?: string;
   issuedAt: string;
 };
 
