@@ -94,7 +94,7 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
       .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime());
   }, [receipts, filter, selectedMonth, search]);
 
-  const totalRevenue = filtered.reduce((s, r) => s + r.total, 0);
+  const totalRevenue = useMemo(() => filtered.reduce((s, r) => s + r.total, 0), [filtered]);
 
   const DATE_FILTERS: Array<{key: DateFilter; label: string}> = [
     {key: 'all', label: 'All time'},
@@ -190,6 +190,10 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={[styles.emptyTitle, { color: colors.ink }]}>No transactions found</Text>

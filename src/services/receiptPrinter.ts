@@ -177,6 +177,43 @@ export async function printReceipt(escPosText: string): Promise<boolean> {
 }
 
 /**
+ * Generates ESC/POS commands for a product QR label.
+ */
+export function formatQrLabel(
+  product: Product,
+  count: number,
+): string {
+  const ESC = '\x1B';
+  const GS = '\x1D';
+  const LF = '\n';
+  const GS_QR = `${GS}k`; // Start of QR command
+
+  const CENTER = `${ESC}a\x01`;
+  const BOLD_ON = `${ESC}E\x01`;
+  const BOLD_OFF = `${ESC}E\x00`;
+  const CUT = `${GS}V\x01`;
+
+  const labelParts: string[] = [];
+
+  for (let i = 0; i < count; i++) {
+    labelParts.push(CENTER);
+    
+    // QR Code Placeholder (In real ESC/POS, this involves complex multi-step commands)
+    // For this mock, we represent the QR command sequence
+    labelParts.push(GS_QR + '\x06\x03\x08' + product.id); 
+    
+    labelParts.push(LF);
+    labelParts.push(BOLD_ON + product.name + BOLD_OFF);
+    labelParts.push(LF);
+    labelParts.push(product.code);
+    labelParts.push(LF + LF);
+    labelParts.push(CUT);
+  }
+
+  return labelParts.join('');
+}
+
+/**
  * Test print for printer setup validation.
  */
 export async function testPrint(storeName: string): Promise<boolean> {

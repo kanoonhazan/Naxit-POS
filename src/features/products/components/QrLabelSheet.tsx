@@ -2,9 +2,11 @@ import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
-import {Button, Card, SheetModal, formatMoney} from '../../../components/Primitives';
+import {Button, Card, SheetModal, TextField} from '../../../components/Primitives';
 import {useAppTheme} from '../../../theme';
 import type {Product} from '../../../types';
+import {formatQrLabel, printReceipt} from '../../../services/receiptPrinter';
+import {useSalesStore} from '../../../stores/useSalesStore';
 
 type QrLabelSheetProps = {
   product: Product | null;
@@ -13,6 +15,32 @@ type QrLabelSheetProps = {
 
 export function QrLabelSheet({product, onClose}: QrLabelSheetProps) {
   const {colors, spacing, radius} = useAppTheme();
+  const pushFeedback = useSalesStore(state => state.pushFeedback);
+  const [batchCount, setBatchCount] = React.useState('1');
+  const [printing, setPrinting] = React.useState(false);
+
+  const handlePrint = async () => {
+    if (!product) { return; }
+    
+    const count = parseInt(batchCount, 10);
+    if (isNaN(count) || count <= 0) {
+      pushFeedback('warning', 'Invalid count', 'Please enter a number greater than 0.');
+      return;
+    }
+
+    setPrinting(true);
+    const escPos = formatQrLabel(product, count);
+    const success = await printReceipt(escPos);
+    setPrinting(false);
+
+    if (success) {
+      pushFeedback('success', 'Labels queued', `${count} QR labels sent to printer.`);
+      onClose();
+    } else {
+      pushFeedback('danger', 'Printing failed', 'Could not send data to the printer.');
+    }
+  };
+
   return (
     <SheetModal
       visible={Boolean(product)}
@@ -35,12 +63,25 @@ export function QrLabelSheet({product, onClose}: QrLabelSheetProps) {
           <View style={styles.textBlock}>
             <Text style={[styles.productName, {color: colors.ink}]}>{product.name}</Text>
             <Text style={[styles.productMeta, {color: colors.muted}]}>{product.code}</Text>
-            <Text style={[styles.productMeta, {color: colors.muted}]}>
-              {formatMoney(product.price)}
-            </Text>
           </View>
+
+          <View style={styles.batchWrap}>
+             <TextField
+               label="Batch count"
+               placeholder="1"
+               value={batchCount}
+               onChangeText={setBatchCount}
+               keyboardType="numeric"
+             />
+          </View>
+
           <View style={styles.actionRow}>
-            <Button label="Print label" onPress={onClose} compact />
+            <Button 
+              label={printing ? 'Printing...' : 'Print label'} 
+              onPress={handlePrint} 
+              disabled={printing}
+              compact 
+            />
             <Button
               label="Close"
               onPress={onClose}
@@ -77,5 +118,9 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: 10,
+    marginTop: 10,
+  },
+  batchWrap: {
+    paddingVertical: 14,
   },
 });

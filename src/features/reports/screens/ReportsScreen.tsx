@@ -39,29 +39,61 @@ export function ReportsScreen() {
 
   const [showHistory, setShowHistory] = useState(false);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
+  
+  const yesterday = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - 1);
+    return d;
+  }, [today]);
 
-  const todayReceipts = receipts.filter(receipt =>
-    sameDay(new Date(receipt.issuedAt), today),
-  );
-  const todayRevenue = todayReceipts.reduce(
-    (sum, receipt) => sum + receipt.total,
-    0,
-  );
+  const { todayReceipts, yesterdayReceipts, totalRevenue, yesterdayRevenue, todayRevenue } = useMemo(() => {
+    let tRecs: typeof receipts = [];
+    let yRecs: typeof receipts = [];
+    let tRev = 0;
+    let yRev = 0;
+    let totalRev = 0;
 
-  const chartData = Array.from({length: 7}, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (6 - index));
-
-    const amount = receipts
-      .filter(receipt => sameDay(new Date(receipt.issuedAt), date))
-      .reduce((sum, receipt) => sum + receipt.total, 0);
+    receipts.forEach(r => {
+      const rDate = new Date(r.issuedAt);
+      const isToday = sameDay(rDate, today);
+      const isYesterday = sameDay(rDate, yesterday);
+      
+      if (isToday) {
+        tRecs.push(r);
+        tRev += r.total;
+      }
+      if (isYesterday) {
+        yRecs.push(r);
+        yRev += r.total;
+      }
+      totalRev += r.total;
+    });
 
     return {
-      label: date.toLocaleDateString([], {weekday: 'short'}),
-      amount,
+      todayReceipts: tRecs,
+      yesterdayReceipts: yRecs,
+      todayRevenue: tRev,
+      yesterdayRevenue: yRev,
+      totalRevenue: totalRev,
     };
-  });
+  }, [receipts, today, yesterday]);
+
+  const chartData = useMemo(() => {
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (6 - index));
+
+      const amount = receipts
+        .filter(receipt => sameDay(new Date(receipt.issuedAt), date))
+        .reduce((sum, receipt) => sum + receipt.total, 0);
+
+      return {
+        label: date.toLocaleDateString([], { weekday: 'short' }),
+        amount,
+      };
+    });
+  }, [receipts, today]);
 
   const topProduct = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -79,33 +111,20 @@ export function ReportsScreen() {
     );
   }, [products, receipts]);
 
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-
-  const yesterdayReceipts = receipts.filter(receipt =>
-    sameDay(new Date(receipt.issuedAt), yesterday),
-  );
-
-  const yesterdayRevenue = yesterdayReceipts.reduce(
-    (sum, receipt) => sum + receipt.total,
-    0,
-  );
-
-  const totalRevenue = receipts.reduce(
-    (sum, receipt) => sum + receipt.total,
-    0,
-  );
-
-  const performancePercent = totalRevenue > 0
-    ? Math.round((yesterdayRevenue / totalRevenue) * 100)
-    : 0;
+  const performancePercent = useMemo(() => {
+    return totalRevenue > 0
+      ? Math.round((yesterdayRevenue / totalRevenue) * 100)
+      : 0;
+  }, [yesterdayRevenue, totalRevenue]);
 
   const performanceValue = `${performancePercent}%`;
 
-  const maxChartAmount = Math.max(
-    ...chartData.map(item => item.amount),
-    1,
-  );
+  const maxChartAmount = useMemo(() => {
+    return Math.max(
+      ...chartData.map(item => item.amount),
+      1,
+    );
+  }, [chartData]);
 
   // Show the full history screen as an overlay
   if (showHistory) {

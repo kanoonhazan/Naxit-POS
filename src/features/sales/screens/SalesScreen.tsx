@@ -101,7 +101,7 @@ export function SalesScreen() {
   );
   const lastItem = cartProducts[cartProducts.length - 1];
 
-  const handleAddToCart = (
+  const handleAddToCart = React.useCallback((
     productId: string,
     source: 'scan' | 'tap' = 'tap',
   ) => {
@@ -133,9 +133,9 @@ export function SalesScreen() {
       source === 'scan' ? 'Scan accepted' : 'Added to cart',
       `${product.name} is ready to checkout.`,
     );
-  };
+  }, [getProductById, pushFeedback, getItemQuantity, addToCart]);
 
-  const handleScanCode = (code: string) => {
+  const handleScanCode = React.useCallback((code: string) => {
     const product = getProductByCode(code);
 
     if (!product) {
@@ -148,13 +148,13 @@ export function SalesScreen() {
     }
 
     handleAddToCart(product.id, 'scan');
-  };
+  }, [getProductByCode, pushFeedback, handleAddToCart]);
 
-  const handleOpenCatalog = () => {
+  const handleOpenCatalog = React.useCallback(() => {
     setIsBrowsing(true);
-  };
+  }, []);
 
-  const handleUpdateQuantity = (productId: string, delta: number) => {
+  const handleUpdateQuantity = React.useCallback((productId: string, delta: number) => {
     const product = getProductById(productId);
     if (!product) {
       return;
@@ -183,9 +183,9 @@ export function SalesScreen() {
     }
 
     updateQuantity(productId, delta);
-  };
+  }, [getProductById, getItemQuantity, removeFromCart, pushFeedback, updateQuantity]);
 
-  const handleRemoveItem = (productId: string) => {
+  const handleRemoveItem = React.useCallback((productId: string) => {
     const product = getProductById(productId);
     removeFromCart(productId);
 
@@ -196,9 +196,9 @@ export function SalesScreen() {
         `${product.name} was removed.`,
       );
     }
-  };
+  }, [getProductById, removeFromCart, pushFeedback]);
 
-  const handleCheckout = async () => {
+  const handleCheckout = React.useCallback(async () => {
     if (!settings) {
       return;
     }
@@ -252,18 +252,31 @@ export function SalesScreen() {
         ? 'Receipt sent to printer.'
         : 'Receipt ready to view.',
     );
-  };
+  }, [
+    settings,
+    cartItems,
+    cartProducts,
+    adjustStock,
+    checkout,
+    receipts.length,
+    clearCart,
+    subtotal,
+    paymentMethod,
+    customerName,
+    customerPhone,
+    pushFeedback,
+  ]);
 
   const printerConnected = settings?.printerConnected ?? false;
 
   const isSearching = searchQuery.length > 0 || selectedCategory !== null || isBrowsing;
 
 
-  const dismissSearch = () => {
+  const dismissSearch = React.useCallback(() => {
     setSearchQuery('');
     setSelectedCategory(null);
     setIsBrowsing(false);
-  };
+  }, []);
 
   const paymentMethods: PaymentMethod[] = ['cash', 'card', 'split'];
 

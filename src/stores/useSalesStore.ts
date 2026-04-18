@@ -47,8 +47,18 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
   },
 
   checkout: async ({items, subtotal, paymentMethod, customerName, customerPhone, receiptCount}) => {
+    // Safety check: Don't checkout empty carts
+    if (!items || items.length === 0) {
+      throw new Error('Checkout failed: Cart is empty');
+    }
+
     const tax = 0;
     const total = subtotal + tax;
+
+    // Safety check: Prevent negative or impossible totals
+    if (total < 0) {
+      throw new Error('Checkout failed: Total cannot be negative');
+    }
 
     const nextReceipt: Receipt = {
       id: `receipt-${Date.now()}`,
