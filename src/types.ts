@@ -52,4 +52,5 @@ export type StoreSettings = {
   autoPrint: boolean;
   currency: string;
   cameraSleepSeconds: number;
+  hasSeenOnboarding: boolean;
 };

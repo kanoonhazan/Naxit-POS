@@ -26,6 +26,7 @@ const defaultSettings: StoreSettings = {
   autoPrint: true,
   currency: 'LKR',
   cameraSleepSeconds: 8,
+  hasSeenOnboarding: false,
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({

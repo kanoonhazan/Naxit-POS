@@ -14,4 +14,6 @@ export const seedSettings: StoreSettings = {
   printerConnected: true,
   autoPrint: true,
   currency: 'LKR',
+  cameraSleepSeconds: 8,
+  hasSeenOnboarding: false,
 };

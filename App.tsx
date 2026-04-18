@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -12,6 +12,8 @@ import {SafeAreaProvider, useSafeAreaInsets} from 'react-native-safe-area-contex
 import {TabBar} from './src/navigation/TabBar';
 import {useAppInit} from './src/hooks/useAppInit';
 import {useSettingsStore} from './src/stores/useSettingsStore';
+import {IntroScreen} from './src/components/IntroScreen';
+import {OnboardingScreen} from './src/components/OnboardingScreen';
 import {ErrorBoundary} from './src/components/ErrorBoundary';
 import {theme} from './src/theme';
 import type {TabKey} from './src/types';
@@ -38,15 +40,47 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<TabKey>('sales');
   const {loading, error, retry} = useAppInit();
   const settings = useSettingsStore(state => state.settings);
+  
+  const [showIntro, setShowIntro] = useState(true);
+  const [introFinished, setIntroFinished] = useState(false);
 
-  if (loading) {
+  // Handle minimum intro duration
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIntroFinished(true);
+    }, 2000); // 2 seconds minimum for the intro
+    return () => clearTimeout(timer);
+  }, []);
+
+  // When both loading is done AND minimum intro time has passed, we can hide the intro
+  useEffect(() => {
+    if (!loading && introFinished && settings) {
+      // Small delay before unmounting to ensure smooth transition
+      const timer = setTimeout(() => {
+        setShowIntro(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, introFinished, settings]);
+
+  const updateSettings = useSettingsStore(state => state.updateSettings);
+
+  const handleOnboardingComplete = () => {
+    updateSettings({hasSeenOnboarding: true});
+  };
+
+  if (showIntro || (loading && !error)) {
     return (
-      <View style={styles.centerState}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.centerTitle}>Opening offline POS</Text>
-        <Text style={styles.centerBody}>
-          Loading your local database, products, receipts, and settings.
-        </Text>
+      <View style={styles.appShell}>
+        <IntroScreen />
+      </View>
+    );
+  }
+
+  if (settings && !settings.hasSeenOnboarding) {
+    return (
+      <View style={styles.appShell}>
+        <OnboardingScreen onComplete={handleOnboardingComplete} />
       </View>
     );
   }
