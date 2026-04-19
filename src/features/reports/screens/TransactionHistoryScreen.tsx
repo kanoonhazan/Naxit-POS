@@ -87,6 +87,8 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
         return (
           r.number.toLowerCase().includes(q) ||
           r.paymentMethod.toLowerCase().includes(q) ||
+          r.customerName?.toLowerCase().includes(q) ||
+          r.customerPhone?.toLowerCase().includes(q) ||
           r.items.some(i => i.name.toLowerCase().includes(q))
         );
       })
@@ -235,6 +237,22 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
                       <Text style={[styles.txLineTotal, { color: colors.ink }]}>{formatMoney(line.price * line.quantity, currency)}</Text>
                     </View>
                   ))}
+
+                  {(item.customerName || item.customerPhone) && (
+                    <View style={[styles.txCustomerSection, { backgroundColor: colors.panelMuted, borderRadius: radius.sm }]}>
+                      {item.customerName && (
+                        <Text style={[styles.txCustomerLabel, { color: colors.ink }]}>
+                          Client: <Text style={styles.txCustomerValue}>{item.customerName}</Text>
+                        </Text>
+                      )}
+                      {item.customerPhone && (
+                        <Text style={[styles.txCustomerLabel, { color: colors.ink }]}>
+                          Phone: <Text style={styles.txCustomerValue}>{item.customerPhone}</Text>
+                        </Text>
+                      )}
+                    </View>
+                  )}
+
                   <View style={[styles.txDivider, { backgroundColor: colors.border }]} />
                   <View style={styles.txSummaryRow}>
                     <Text style={[styles.txSummaryLabel, { color: colors.muted }]}>Subtotal</Text>
@@ -455,5 +473,17 @@ const styles = StyleSheet.create({
   },
   txSummaryValue: {
     fontSize: 13,
+  },
+  txCustomerSection: {
+    padding: 10,
+    marginTop: 4,
+    gap: 4,
+  },
+  txCustomerLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  txCustomerValue: {
+    fontWeight: '400',
   },
 });
