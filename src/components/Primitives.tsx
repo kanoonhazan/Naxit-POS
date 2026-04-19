@@ -10,7 +10,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSalesStore } from '../stores/useSalesStore';
 
 import { useAppTheme } from '../theme';
 import type { SalesFeedback } from '../types';
@@ -69,6 +70,7 @@ export function Screen({
   scrollEnabled = true,
 }: ScreenProps) {
   const { colors } = useAppTheme();
+  const feedback = useSalesStore(state => state.feedback);
   
   const content = (
     <>
@@ -83,6 +85,7 @@ export function Screen({
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+      <FeedbackToast feedback={feedback} />
       {scrollEnabled ? (
         <ScrollView
           contentContainerStyle={[
@@ -237,6 +240,8 @@ export function MetricCard({
         return { bg: colors.successSoft };
       case 'warning':
         return { bg: colors.warningSoft };
+      case 'danger':
+        return { bg: colors.dangerSoft };
       default:
         return { bg: colors.panelMuted };
     }
@@ -253,7 +258,7 @@ export function MetricCard({
         },
       ]}>
       <Text style={[styles.metricLabel, { color: colors.muted }]}>{label}</Text>
-      <Text style={[styles.metricValue, { color: colors.ink }]}>{value}</Text>
+      <Text style={[styles.metricValue, { color: colors.ink }]}>{value.replace(/\s/, '\n')}</Text>
     </View>
   );
 }
@@ -457,6 +462,8 @@ export function ToggleRow({
 export function FeedbackToast({ feedback }: { feedback: SalesFeedback | null }) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-10)).current;
+  const insets = useSafeAreaInsets();
+  const clearFeedback = useSalesStore(state => state.clearFeedback);
 
   useEffect(() => {
     if (!feedback) {
@@ -489,8 +496,11 @@ export function FeedbackToast({ feedback }: { feedback: SalesFeedback | null }) 
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
-  }, [feedback, opacity, translateY]);
+    ]).start(() => {
+      // Clear feedback from store so it doesn't reappear
+      clearFeedback();
+    });
+  }, [feedback, opacity, translateY, clearFeedback]);
 
   const { colors, radius, shadow } = useAppTheme();
   
@@ -524,6 +534,8 @@ export function FeedbackToast({ feedback }: { feedback: SalesFeedback | null }) 
           ...shadow,
           opacity,
           transform: [{ translateY }],
+          top: Math.max(14, insets.top), // Ensure it stays below status bar/notch
+          zIndex: 1000,
         },
       ]}>
       <Text style={[styles.toastTitle, { color: colors.panel }]}>{feedback.title}</Text>
@@ -711,6 +723,7 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 20,
     fontWeight: '800',
+    lineHeight: 24,
   },
   pill: {
     alignSelf: 'flex-start',

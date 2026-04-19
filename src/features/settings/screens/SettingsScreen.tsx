@@ -41,6 +41,12 @@ export function SettingsScreen() {
   const [cameraSleep, setCameraSleep] = useState(
     String(settings?.cameraSleepSeconds ?? 8),
   );
+  const [enableNotifications, setEnableNotifications] = useState(
+    settings?.enableNotifications ?? true,
+  );
+  const [lowStockThreshold, setLowStockThreshold] = useState(
+    String(settings?.lowStockThreshold ?? 5),
+  );
 
   const handleSaveStore = () => {
     updateSettings({
@@ -66,6 +72,19 @@ export function SettingsScreen() {
       'success',
       'Printer saved',
       'Printer settings updated. This device is still fully offline.',
+    );
+  };
+
+  const handleSaveInventory = () => {
+    const thresholdNum = Math.max(0, parseInt(lowStockThreshold, 10) || 5);
+    updateSettings({
+      enableNotifications,
+      lowStockThreshold: thresholdNum,
+    });
+    pushFeedback(
+      'success',
+      'Inventory settings saved',
+      'Stock monitoring threshold updated.',
     );
   };
 
@@ -250,6 +269,27 @@ export function SettingsScreen() {
             variant="secondary"
           />
         </View>
+      </Card>
+
+      <Card>
+        <SectionTitle
+          title="Inventory & Alerts"
+          detail="Get notified when stock levels are running low."
+        />
+        <ToggleRow
+          label="Enable notifications"
+          hint="Allow the app to send inventory alerts in the background."
+          value={enableNotifications}
+          onValueChange={setEnableNotifications}
+        />
+        <TextField
+          label="Low stock threshold"
+          value={lowStockThreshold}
+          onChangeText={setLowStockThreshold}
+          placeholder="5"
+          keyboardType="numeric"
+        />
+        <Button label="Save inventory settings" onPress={handleSaveInventory} />
       </Card>
 
       <Card>

@@ -27,6 +27,7 @@ type SalesStore = {
     receiptCount: number;
   }) => Promise<Receipt>;
 
+  clearFeedback: () => void;
   clearLastReceipt: () => void;
 };
 
@@ -100,5 +101,6 @@ export const useSalesStore = create<SalesStore>((set, get) => ({
     return nextReceipt;
   },
 
+  clearFeedback: () => set({feedback: null}),
   clearLastReceipt: () => set({lastReceipt: null}),
 }));

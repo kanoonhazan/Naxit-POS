@@ -12,6 +12,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@notifee/react-native": "^9.1.8",
     "@react-native/new-app-screen": "0.85.1",
     "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0",

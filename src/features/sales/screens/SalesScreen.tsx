@@ -21,6 +21,7 @@ import {
   printReceipt,
 } from '../../../services/receiptPrinter';
 import { useAppTheme } from '../../../theme';
+import { notificationService } from '../../../services/notificationService';
 import type { PaymentMethod, Product } from '../../../types';
 
 import { CartPanel } from '../components/CartPanel';
@@ -43,7 +44,6 @@ export function SalesScreen() {
   const getItemQuantity = useCartStore(state => state.getItemQuantity);
 
   const receipts = useSalesStore(state => state.receipts);
-  const feedback = useSalesStore(state => state.feedback);
   const lastReceipt = useSalesStore(state => state.lastReceipt);
   const pushFeedback = useSalesStore(state => state.pushFeedback);
   const checkout = useSalesStore(state => state.checkout);
@@ -60,6 +60,10 @@ export function SalesScreen() {
   const [discountValue, setDiscountValue] = useState('');
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
   const [isBrowsing, setIsBrowsing] = useState(false);
+
+  React.useEffect(() => {
+    notificationService.initialize().catch(console.error);
+  }, []);
 
   const categories = useMemo(
     () => Array.from(new Set(products.map(p => p.category).filter(Boolean))),
@@ -244,6 +248,18 @@ export function SalesScreen() {
       receiptCount: receipts.length,
     });
 
+    // Check for low stock after stock adjustments
+    if (settings.enableNotifications) {
+      const lowStockThreshold = settings.lowStockThreshold;
+      const criticalProducts = cartProducts
+        .map(item => getProductById(item.id))
+        .filter(p => p && p.stock <= lowStockThreshold) as Product[];
+
+      if (criticalProducts.length > 0) {
+        notificationService.notifyLowStock(criticalProducts).catch(console.error);
+      }
+    }
+
     clearCart();
     setCheckoutStage('cart');
     setCustomerName('');
@@ -295,8 +311,6 @@ export function SalesScreen() {
 
   return (
     <View style={styles.root}>
-      <FeedbackToast feedback={feedback} />
-
       <Screen scrollEnabled={false} bottomPadding={100}>
         <View style={styles.contentWrap}>
           {isSearching && (

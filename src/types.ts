@@ -60,4 +60,6 @@ export type StoreSettings = {
   cameraSleepSeconds: number;
   hasSeenOnboarding: boolean;
   themeMode: 'light' | 'dark' | 'system';
+  lowStockThreshold: number;
+  enableNotifications: boolean;
 };

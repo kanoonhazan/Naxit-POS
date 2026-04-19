@@ -28,6 +28,8 @@ const defaultSettings: StoreSettings = {
   cameraSleepSeconds: 8,
   hasSeenOnboarding: false,
   themeMode: 'system',
+  lowStockThreshold: 5,
+  enableNotifications: true,
 };
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({

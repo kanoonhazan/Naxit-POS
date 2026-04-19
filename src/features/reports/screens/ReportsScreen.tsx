@@ -1,5 +1,5 @@
-import React, {useMemo, useState} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   Button,
@@ -10,11 +10,11 @@ import {
   Tag,
   formatMoney,
 } from '../../../components/Primitives';
-import {useProductStore} from '../../../stores/useProductStore';
-import {useSalesStore} from '../../../stores/useSalesStore';
-import {useSettingsStore} from '../../../stores/useSettingsStore';
-import {useAppTheme} from '../../../theme';
-import {TransactionHistoryScreen} from './TransactionHistoryScreen';
+import { useProductStore } from '../../../stores/useProductStore';
+import { useSalesStore } from '../../../stores/useSalesStore';
+import { useSettingsStore } from '../../../stores/useSettingsStore';
+import { useAppTheme } from '../../../theme';
+import { TransactionHistoryScreen } from './TransactionHistoryScreen';
 
 function sameDay(left: Date, right: Date) {
   return (
@@ -26,11 +26,11 @@ function sameDay(left: Date, right: Date) {
 
 function formatTime(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 export function ReportsScreen() {
-  const {colors, spacing, radius} = useAppTheme();
+  const { colors, spacing, radius } = useAppTheme();
   const products = useProductStore(state => state.products);
   const receipts = useSalesStore(state => state.receipts);
   const currency = useSettingsStore(
@@ -40,7 +40,7 @@ export function ReportsScreen() {
   const [showHistory, setShowHistory] = useState(false);
 
   const today = useMemo(() => new Date(), []);
-  
+
   const yesterday = useMemo(() => {
     const d = new Date(today);
     d.setDate(today.getDate() - 1);
@@ -58,7 +58,7 @@ export function ReportsScreen() {
       const rDate = new Date(r.issuedAt);
       const isToday = sameDay(rDate, today);
       const isYesterday = sameDay(rDate, yesterday);
-      
+
       if (isToday) {
         tRecs.push(r);
         tRev += r.total;
@@ -95,29 +95,46 @@ export function ReportsScreen() {
     });
   }, [receipts, today]);
 
-  const topProduct = useMemo(() => {
-    const totals: Record<string, number> = {};
+  const { topProduct, topCategory } = useMemo(() => {
+    const productSales: Record<string, number> = {};
+    const categorySales: Record<string, number> = {};
 
     receipts.forEach(receipt => {
       receipt.items.forEach(item => {
-        totals[item.productId] =
-          (totals[item.productId] || 0) + item.quantity;
+        // Find product to get its category
+        const product = products.find(p => p.id === item.productId);
+        const qty = item.quantity;
+
+        productSales[item.productId] = (productSales[item.productId] || 0) + qty;
+
+        if (product && product.category) {
+          categorySales[product.category] = (categorySales[product.category] || 0) + (item.price * qty);
+        }
       });
     });
 
-    const winner = Object.entries(totals).sort((a, b) => b[1] - a[1])[0];
-    return (
-      products.find(product => product.id === winner?.[0])?.name ?? 'Milk Tea'
-    );
+    const topProdId = Object.entries(productSales).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const topCatName = Object.entries(categorySales).sort((a, b) => b[1] - a[1])[0]?.[0];
+
+    return {
+      topProduct: products.find(p => p.id === topProdId)?.name ?? 'N/A',
+      topCategory: topCatName ?? 'N/A',
+    };
   }, [products, receipts]);
 
-  const performancePercent = useMemo(() => {
-    return totalRevenue > 0
-      ? Math.round((yesterdayRevenue / totalRevenue) * 100)
-      : 0;
-  }, [yesterdayRevenue, totalRevenue]);
+  const growthRate = useMemo(() => {
+    if (yesterdayRevenue === 0) return todayRevenue > 0 ? 100 : 0;
+    return Math.round(((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100);
+  }, [todayRevenue, yesterdayRevenue]);
 
-  const performanceValue = `${performancePercent}%`;
+  const aov = useMemo(() => {
+    return todayReceipts.length > 0 ? Math.round(todayRevenue / todayReceipts.length) : 0;
+  }, [todayRevenue, todayReceipts.length]);
+
+  const lowStockCount = useMemo(() => {
+    const threshold = useSettingsStore.getState().settings?.lowStockThreshold ?? 5;
+    return products.filter(p => p.stock <= threshold).length;
+  }, [products]);
 
   const maxChartAmount = useMemo(() => {
     return Math.max(
@@ -149,8 +166,13 @@ export function ReportsScreen() {
             label="Transactions"
             value={String(todayReceipts.length)}
           />
-          <MetricCard label="Performance" value={performanceValue} />
+          <MetricCard
+            label="Growth"
+            value={`${growthRate >= 0 ? '+' : ''}${growthRate}%`}
+            tone={growthRate >= 0 ? 'success' : 'danger'}
+          />
         </View>
+
       </Card>
 
       {/* 7-day trend + Today's transactions side by side */}
@@ -163,8 +185,8 @@ export function ReportsScreen() {
           <View style={styles.chartWrap}>
             {chartData.map(item => (
               <View key={item.label} style={styles.chartRow}>
-                <Text style={[styles.chartLabel, {color: colors.ink}]}>{item.label}</Text>
-                <View style={[styles.chartTrack, {backgroundColor: colors.panelMuted, borderRadius: radius.pill}]}>
+                <Text style={[styles.chartLabel, { color: colors.ink }]}>{item.label}</Text>
+                <View style={[styles.chartTrack, { backgroundColor: colors.panelMuted, borderRadius: radius.pill }]}>
                   <View
                     style={[
                       styles.chartBar,
@@ -179,7 +201,7 @@ export function ReportsScreen() {
                     ]}
                   />
                 </View>
-                <Text style={[styles.chartAmount, {color: colors.muted}]}>
+                <Text style={[styles.chartAmount, { color: colors.muted }]}>
                   {formatMoney(item.amount, currency)}
                 </Text>
               </View>
@@ -194,23 +216,23 @@ export function ReportsScreen() {
           />
           {todayReceipts.length === 0 ? (
             <View style={styles.emptyHistory}>
-              <Text style={[styles.emptyHistoryText, {color: colors.muted}]}>No sales yet today.</Text>
+              <Text style={[styles.emptyHistoryText, { color: colors.muted }]}>No sales yet today.</Text>
             </View>
           ) : (
             <View style={styles.historyList}>
               {todayReceipts.slice(0, 4).map(receipt => (
-                <View key={receipt.id} style={[styles.historyRow, {borderBottomColor: colors.border}]}>
+                <View key={receipt.id} style={[styles.historyRow, { borderBottomColor: colors.border }]}>
                   <View style={styles.historyLeft}>
-                    <Text style={[styles.historyNum, {color: colors.ink}]}>#{receipt.number}</Text>
-                    <Text style={[styles.historyTime, {color: colors.muted}]}>{formatTime(receipt.issuedAt)}</Text>
+                    <Text style={[styles.historyNum, { color: colors.ink }]}>#{receipt.number}</Text>
+                    <Text style={[styles.historyTime, { color: colors.muted }]}>{formatTime(receipt.issuedAt)}</Text>
                   </View>
-                  <Text style={[styles.historyAmount, {color: colors.ink}]}>
+                  <Text style={[styles.historyAmount, { color: colors.ink }]}>
                     {formatMoney(receipt.total, currency)}
                   </Text>
                 </View>
               ))}
               {todayReceipts.length > 4 && (
-                <Text style={[styles.moreNote, {color: colors.muted}]}>
+                <Text style={[styles.moreNote, { color: colors.muted }]}>
                   +{todayReceipts.length - 4} more…
                 </Text>
               )}
@@ -230,14 +252,14 @@ export function ReportsScreen() {
           title="Quick read"
           detail="The app explains what matters so owners do not need to interpret graphs."
         />
-        <View style={[styles.insightCard, {backgroundColor: colors.primarySoft, borderRadius: radius.md}]}>
-          <Text style={[styles.insightTitle, {color: colors.primary}]}>
-            What the owner should do next
+        <View style={[styles.insightCard, { backgroundColor: colors.primarySoft, borderRadius: radius.md }]}>
+          <Text style={[styles.insightTitle, { color: colors.primary }]}>
+            {growthRate >= 0 ? 'Positive trend detected' : 'Attention needed'}
           </Text>
-          <Text style={[styles.insightBody, {color: colors.ink}]}>
+          <Text style={[styles.insightBody, { color: colors.ink }]}>
             {todayRevenue > 0
-              ? `Sales are active today. Restock ${topProduct} first and keep the scanner view open at the counter.`
-              : 'No sales logged today yet. Open the Sales tab and keep fast keys visible for walk-in orders.'}
+              ? `${growthRate >= 0 ? 'Your sales are up!' : 'Sales are slower than yesterday.'} ${topProduct} is your star performer. ${lowStockCount > 0 ? `Alert: You have ${lowStockCount} items running low; restock these to maintain momentum.` : 'Inventory is healthy.'} Focus on your ${topCategory} category for maximum impact.`
+              : 'No sales logged today yet. Check if your store is open and keep fast keys visible for quick orders.'}
           </Text>
         </View>
       </Card>
