@@ -20,6 +20,7 @@ type ProductStore = {
   deleteProduct: (productId: string) => void;
 
   adjustStock: (productId: string, delta: number) => void;
+  bulkAdjustStock: (adjustments: Array<{id: string; delta: number}>) => void;
 
   getProductById: (productId: string) => Product | undefined;
 
@@ -103,6 +104,23 @@ export const useProductStore = create<ProductStore>((set, get) => ({
     }));
 
     updateProductStock(productId, nextStockValue).catch(() => {});
+  },
+
+  bulkAdjustStock: (adjustments) => {
+    const products = get().products;
+    const nextProducts = products.map(product => {
+      const adj = adjustments.find(a => a.id === product.id);
+      if (!adj) {
+        return product;
+      }
+      return {
+        ...product,
+        stock: Math.max(0, product.stock + adj.delta),
+      };
+    });
+
+    set({products: nextProducts});
+    // Note: Database sync is handled by persistReceipt during checkout to avoid double deduction
   },
 
   getProductById: (productId: string) => {

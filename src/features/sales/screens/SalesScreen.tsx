@@ -35,6 +35,7 @@ export function SalesScreen() {
   const getProductById = useProductStore(state => state.getProductById);
   const getProductByCode = useProductStore(state => state.getProductByCode);
   const adjustStock = useProductStore(state => state.adjustStock);
+  const bulkAdjustStock = useProductStore(state => state.bulkAdjustStock);
 
   const cartItems = useCartStore(state => state.items);
   const addToCart = useCartStore(state => state.addToCart);
@@ -232,10 +233,10 @@ export function SalesScreen() {
       quantity: item.quantity,
     }));
 
-    // Reduce stock for each sold item
-    cartItems.forEach(item => {
-      adjustStock(item.productId, -item.quantity);
-    });
+    // Optimistically update UI stock in bulk (Fast UI)
+    bulkAdjustStock(
+      cartItems.map(item => ({ id: item.productId, delta: -item.quantity }))
+    );
 
     const receipt = await checkout({
       items: receiptItems,
@@ -248,7 +249,7 @@ export function SalesScreen() {
       receiptCount: receipts.length,
     });
 
-    // Check for low stock after stock adjustments
+    // Check for low stock alert
     if (settings.enableNotifications) {
       const lowStockThreshold = settings.lowStockThreshold;
       const criticalProducts = cartProducts

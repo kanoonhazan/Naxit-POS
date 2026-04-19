@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef } from 'react';
 import {
   Animated,
   Modal,
@@ -151,7 +151,7 @@ export function SectionTitle({
   );
 }
 
-export function Button({
+export const Button = memo(function Button({
   label,
   onPress,
   variant = 'primary',
@@ -221,9 +221,9 @@ export function Button({
       </Text>
     </Pressable>
   );
-}
+});
 
-export function MetricCard({
+export const MetricCard = memo(function MetricCard({
   label,
   value,
   tone = 'default',
@@ -261,9 +261,9 @@ export function MetricCard({
       <Text style={[styles.metricValue, { color: colors.ink }]}>{value.replace(/\s/, '\n')}</Text>
     </View>
   );
-}
+});
 
-export function StockPill({ stock }: { stock: number }) {
+export const StockPill = memo(function StockPill({ stock }: { stock: number }) {
   const { colors, radius } = useAppTheme();
   const tone =
     stock <= 5 ? 'danger' : stock <= 12 ? 'warning' : 'success';
@@ -299,9 +299,9 @@ export function StockPill({ stock }: { stock: number }) {
       </Text>
     </View>
   );
-}
+});
 
-export function Tag({
+export const Tag = memo(function Tag({
   label,
   tone = 'neutral',
 }: {
@@ -337,7 +337,7 @@ export function Tag({
       <Text style={[styles.tagText, { color: s.text }]}>{label}</Text>
     </View>
   );
-}
+});
 
 export function CategoryFilter({
   categories,

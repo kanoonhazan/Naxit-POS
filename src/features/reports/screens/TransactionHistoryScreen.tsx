@@ -62,22 +62,37 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
     });
   }, [receipts]);
 
+  // Pre-process receipts with timestamps for faster sorting/filtering
+  const receiptsWithTs = useMemo(() => {
+    return receipts.map(r => ({
+      ...r,
+      ts: new Date(r.issuedAt).getTime(),
+      yearMonth: isoYearMonth(r.issuedAt)
+    }));
+  }, [receipts]);
+
   const filtered = useMemo(() => {
-    const now = new Date();
-    return receipts
+    const nowTs = new Date().getTime();
+    const todayStr = new Date().toDateString();
+    
+    return receiptsWithTs
       .filter(r => {
-        const date = new Date(r.issuedAt);
-        if (filter === 'today') { return isSameDay(date, now); }
+        if (filter === 'all') return true;
+        
+        const rDate = new Date(r.ts);
+        if (filter === 'today') {
+           return rDate.toDateString() === todayStr;
+        }
         if (filter === 'week') {
-          const cutoff = new Date(now);
-          cutoff.setDate(now.getDate() - 6);
-          return date >= cutoff;
+          const sevenDaysAgo = nowTs - 7 * 24 * 60 * 60 * 1000;
+          return r.ts >= sevenDaysAgo;
         }
         if (filter === 'month') {
-          return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+          const now = new Date();
+          return rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear();
         }
         if (filter === 'custom' && selectedMonth) {
-          return isoYearMonth(r.issuedAt) === selectedMonth;
+          return r.yearMonth === selectedMonth;
         }
         return true;
       })
@@ -92,9 +107,8 @@ export function TransactionHistoryScreen({onBack}: {onBack: () => void}) {
           r.items.some(i => i.name.toLowerCase().includes(q))
         );
       })
-      .slice()
-      .sort((a, b) => new Date(b.issuedAt).getTime() - new Date(a.issuedAt).getTime());
-  }, [receipts, filter, selectedMonth, search]);
+      .sort((a, b) => b.ts - a.ts);
+  }, [receiptsWithTs, filter, selectedMonth, search]);
 
   const totalRevenue = useMemo(() => filtered.reduce((s, r) => s + r.total, 0), [filtered]);
 
