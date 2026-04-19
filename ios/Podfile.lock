@@ -1933,6 +1933,11 @@ PODS:
   - ReactNativeDependencies (0.85.1)
   - RNFS (2.20.0):
     - React-Core
+  - RNNotifee (9.1.8):
+    - React-Core
+    - RNNotifee/NotifeeCore (= 9.1.8)
+  - RNNotifee/NotifeeCore (9.1.8):
+    - React-Core
   - RNPermissions (5.5.1):
     - hermes-engine
     - RCTRequired
@@ -2105,6 +2110,7 @@ DEPENDENCIES:
   - ReactNativeCameraKit (from `../node_modules/react-native-camera-kit`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - RNFS (from `../node_modules/react-native-fs`)
+  - "RNNotifee (from `../node_modules/@notifee/react-native`)"
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNShare (from `../node_modules/react-native-share`)
   - RNSVG (from `../node_modules/react-native-svg`)
@@ -2274,6 +2280,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
   RNFS:
     :path: "../node_modules/react-native-fs"
+  RNNotifee:
+    :path: "../node_modules/@notifee/react-native"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
   RNShare:
@@ -2364,6 +2372,7 @@ SPEC CHECKSUMS:
   ReactNativeCameraKit: d927f731400b1f45f7b441668d2f31cb873198f6
   ReactNativeDependencies: 27fe7ac1415b8f190c1f06efbedaaf29032854d7
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
+  RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNPermissions: efe8a25c61593f06e89868940d9c08b21e0d6001
   RNShare: 2afdc1739d80ac140b2870ae81e8b2098f4599d9
   RNSVG: 04044c3abcf177fd674a1a3d13097efa1adebcbe
